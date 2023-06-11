@@ -1,1 +1,1 @@
-# Vision_transformer_features
+# Vision Transformer Features
