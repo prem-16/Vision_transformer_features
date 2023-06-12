@@ -1,5 +1,6 @@
+setuptools==65.5.0
 gym==0.21.0
-torch==1.11.0
+# torch==1.11.0
 numpy==1.23.5
 tensorboard==1.15.0
 matplotlib==3.7.1
