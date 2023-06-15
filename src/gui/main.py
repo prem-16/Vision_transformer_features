@@ -231,7 +231,7 @@ def populate_model_settings():
                     StringVar(model_settings_frame, setting_dict["default"]),
                     *setting_dict["options"],
                     command=lambda event, n=setting_name, s=setting_content: model_manager.apply_setting(
-                        n, s.get()
+                        n, event
                     )
                 )
                 setting_content.config(bg=inner_frame_colour, highlightbackground=LIGHT_GREY, highlightthickness=0)
@@ -302,8 +302,8 @@ def left_image_canvas_click(event):
     x = event.x / left_image_width
     y = (event.y - ((image_frame_height / 2) - (left_image_height / 2))) / left_image_height
 
-    print("LEFT IMAGE HEIGHT", left_image_height)
-    print("IMAGE FRAME HEIGHT", image_frame_height)
+    # print("LEFT IMAGE HEIGHT", left_image_height)
+    # print("IMAGE FRAME HEIGHT", image_frame_height)
 
     if x > 0 and 0 < y < image_frame_height:
         # Delete all children from canvas of type oval
@@ -358,7 +358,7 @@ def set_left_image(image_id):
 
     # Create canvas with image as background
     left_image_canvas = Canvas(left_image_container, width=pil_image.width, height=pil_image.height)
-    print("LEFT PIL IMAGE HEIGHT IS", pil_image.height)
+    # print("LEFT PIL IMAGE HEIGHT IS", pil_image.height)
     left_image_canvas.pack(expand=True, fill=BOTH)
     # left_image_label.create_image(0, 0, image=left_image, anchor=NW)
     # CENTER THE IMAGE
