@@ -4,6 +4,7 @@ from PIL import Image
 from PIL import ImageTk
 
 from src.gui.helpers import get_image_list
+from src.models.model_gui_manager import ModelGUIManager
 from src.models.model_wrapper_list import MODEL_DICT
 
 master = Tk()
@@ -16,15 +17,22 @@ master.geometry("{}x{}".format(width, height))
 image_directory = "images/test_images/"
 image_files, image_dirs = get_image_list(image_directory)
 
+model_manager = ModelGUIManager()
+model_manager.update_model("Test")
+
 left_image_id = 0
 right_image_id = 0
-current_model_id = 0
 
 # Preset colours
 WHITE = "#ffffff"
 VERY_VERY_LIGHT_GREY = "#f8f8f8"
 VERY_LIGHT_GREY = "#f0f0f0"
 LIGHT_GREY = "#d0d0d0"
+
+DARK_GREY = "#a0a0a0"
+VERY_VERY_DARK_GREY = "#909090"
+VERY_DARK_GREY = "#808080"
+BLACK = "#000000"
 
 # Style settings
 background_colour = WHITE
@@ -153,7 +161,7 @@ model_label.pack()
 # Dropdown menu to select model
 model_options = list(MODEL_DICT.keys())
 model_variable = StringVar(settings_inner_frame)
-model_variable.set(model_options[current_model_id])
+model_variable.set(model_options[0])
 model_dropdown = OptionMenu(settings_inner_frame, model_variable, *model_options)
 model_dropdown.config(bg=inner_frame_colour, highlightbackground=LIGHT_GREY, highlightthickness=0)
 model_dropdown.pack()
@@ -175,19 +183,22 @@ model_settings_frame = Frame(
 model_settings_frame.pack(expand=False, fill=X, padx=inner_x_pad, pady=inner_y_pad)
 
 
-def populate_model_settings(current_model_id):
+def populate_model_settings():
+    global model_manager
     global model_settings_frame
     # Clear the frame
     for widget in model_settings_frame.winfo_children():
         widget.destroy()
     # Get the current model
-    settings = MODEL_DICT[list(MODEL_DICT.keys())[current_model_id]].SETTINGS
+    settings = model_manager.model.SETTINGS
     if settings is not None:
+        row_id = 0
         # Populate the frame with the settings
         for setting_name, setting_dict in settings.items():
             # Create a label for the setting
             setting_label = Label(model_settings_frame, text=f"{str(setting_name).capitalize()}:", bg=inner_frame_colour)
-            setting_label.pack(side=LEFT)
+            # setting_label.pack(side=LEFT)
+            setting_label.grid(row=row_id, column=0, padx=inner_x_pad * 4, pady=inner_y_pad)
 
             if setting_dict["type"] == "slider":
                 setting_content = Scale(
@@ -200,22 +211,63 @@ def populate_model_settings(current_model_id):
                     highlightthickness=0
                 )
                 setting_content.set(setting_dict["default"])
-                setting_content.pack(side=RIGHT)
+
+                # Register the setting with the model manager
+                model_manager.apply_setting(setting_name, setting_dict["default"])
+
+                # Upon slider release, update the setting
+                def update_setting(event):
+                    model_manager.apply_setting(setting_name, setting_content.get())
+
+                setting_content.bind("<ButtonRelease-1>", update_setting)
+
+            elif setting_dict["type"] == "dropdown":
+                setting_content = OptionMenu(
+                    model_settings_frame,
+                    StringVar(model_settings_frame, setting_dict["default"]),
+                    *setting_dict["options"]
+                )
+                setting_content.config(bg=inner_frame_colour, highlightbackground=LIGHT_GREY, highlightthickness=0)
+
+                # Register the setting with the model manager
+                model_manager.apply_setting(setting_name, setting_dict["default"])
+
+                # Upon dropdown change, update the setting
+                def update_setting(*args):
+                    model_manager.apply_setting(setting_name, setting_content.get())
+
+                setting_content.bind("<ButtonRelease-1>", update_setting)
             else:
                 # Create label
-                setting_content_label = Label(model_settings_frame, text=f"Invalid type", bg=inner_frame_colour)
-                setting_content_label.pack(side=RIGHT)
+                setting_content = Label(model_settings_frame, text=f"Invalid type", bg=inner_frame_colour)
+
+            setting_content.grid(row=row_id, column=1, sticky=W)
+
+            row_id += 1
+
+            # # Create spacing
+            # space_label = Label(model_settings_frame, text="", bg=inner_frame_colour)
+            # space_label.pack(pady=30, fill=X, expand=True)
     else:
         # Create a label saying empty
         empty_label = Label(model_settings_frame, text="Empty", bg=inner_frame_colour)
         empty_label.pack()
 
-populate_model_settings(current_model_id)
+populate_model_settings()
 
-# On changing the model, update the settings
-model_variable.trace(
-    "w", lambda name, index, mode, sv=model_variable: populate_model_settings(model_options.index(sv.get()))
-)
+# Upon changing the model from the dropdown, call model_manager and update the settings
+def model_dropdown_change(*args):
+    global model_variable
+    global model_manager
+    # Get the current model
+    model_name = model_variable.get()
+    # Update the model
+    model_manager.update_model(model_name)
+    # Update the settings
+    populate_model_settings()
+
+# Set the trace on the model dropdown
+model_variable.trace("w", model_dropdown_change)
 
 
 # --- SETUP RIGHT FRAME --- #

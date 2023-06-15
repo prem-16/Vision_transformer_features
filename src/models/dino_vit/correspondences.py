@@ -1,7 +1,7 @@
 import argparse
 import torch
 from pathlib import Path
-from extractor import ViTExtractor
+from src.models.dino_vit.extractor import ViTExtractor
 from tqdm import tqdm
 import numpy as np
 from sklearn.cluster import KMeans
