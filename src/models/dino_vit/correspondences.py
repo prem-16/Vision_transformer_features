@@ -159,7 +159,7 @@ def chunk_cosine_sim(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     :return: cosine similarity between all descriptors in x and all descriptors in y. Has shape of Bx1x(t_x)x(t_y) """
     result_list = []
     num_token_x = x.shape[2]
-    for token_idx in range(num_token_x):
+    for token_idx in tqdm(range(num_token_x)):
         token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
         result_list.append(torch.nn.CosineSimilarity(dim=3)(token, y))  # Bx1xt
     return torch.stack(result_list, dim=2)  # Bx1x(t_x)x(t_y)

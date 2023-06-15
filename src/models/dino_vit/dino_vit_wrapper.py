@@ -25,7 +25,7 @@ class DinoVITWrapper(ModelWrapperBase):
         "layer": {
             "type": "slider",
             "min": 1,
-            "max": 12,
+            "max": 11,
             "default": 4
         },
         "facet": {
