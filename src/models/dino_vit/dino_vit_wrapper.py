@@ -36,8 +36,9 @@ class DinoVITWrapper(ModelWrapperBase):
         "threshold": {
             "type": "slider",
             "min": 0,
-            "max": 0.5,
-            "default": 0.05
+            "max": 1.0,
+            "default": 0.05,
+            "step": 0.01
         },
         "model_type": {
             "type": "dropdown",
@@ -125,8 +126,8 @@ class DinoVITWrapper(ModelWrapperBase):
         point_x, point_y = point
 
         # Turn image pixel point to descriptor map point
-        point_x = point_x / load_size[1] * num_patches[1]
-        point_y = point_y / load_size[0] * num_patches[0]
+        point_x = point_x * num_patches[1]
+        point_y = point_y * num_patches[0]
 
         # Get the descriptor map point's index
         point_index = int(point_y) * num_patches[1] + int(point_x)
@@ -142,28 +143,35 @@ class DinoVITWrapper(ModelWrapperBase):
         # Filter similarity map to only show the similarity of the annotated descriptor
         similarity_map = self._cache['similarities'][0, 0, descriptor_index]
 
+        # TODO Maybe we need to look at all the similarities of image 2 to image 1?
+
         # Softmax the similarity map
-        # similarity_map = torch.softmax(similarity_map, dim=0)
+        similarity_map = torch.softmax(similarity_map, dim=0)
+
+        # Normalize the similarity map
+        similarity_map = (
+            (similarity_map - torch.min(similarity_map)) / (torch.max(similarity_map) - torch.min(similarity_map))
+        )
 
         # Convert the similarity map to a heatmap
         heatmap = similarity_map.view(self._cache['num_patches2']).cpu().numpy()
 
         return heatmap
 
-if __name__ == '__main__':
-    image = DinoVITWrapper().get_heatmap_vis(
-        "images/test_images/current_state.png",
-        "images/test_images/current_state.png",
-        (101, 59),
-        settings={
-            "model_type": "dino_vits8",
-            "stride": 4,
-            "layer": 9,
-            "facet": "key",
-            "threshold": 0.05,
-            "load_size": 224
-        }
-    )
-    # Convert image pil to numpy array
-    image = np.array(image)
-    pass
+# if __name__ == '__main__':
+#     image = DinoVITWrapper().get_heatmap_vis(
+#         "images/test_images/current_state.png",
+#         "images/test_images/current_state.png",
+#         (101, 59),
+#         settings={
+#             "model_type": "dino_vits8",
+#             "stride": 4,
+#             "layer": 9,
+#             "facet": "key",
+#             "threshold": 0.05,
+#             "load_size": 224
+#         }
+#     )
+#     # Convert image pil to numpy array
+#     image = np.array(image)
+#     pass

@@ -1,3 +1,4 @@
+import numpy as np
 from PIL import Image
 
 
@@ -36,20 +37,21 @@ class ModelWrapperBase:
         heatmap = self.get_heatmap(point)
 
         # Resize the heatmap to the size of the right image
-        image_2 = Image.open(image_dir_2)
+        image_2 = Image.open(image_dir_2).convert("RGB")
         heatmap = heatmap.copy()
-        # Convert heatmap to PIL image
-        heatmap = Image.fromarray(heatmap)
-        # Resize the PIL heatmap
+
+        # Heatmap is numpy array
+        # First convert (H, W) to (H, W, 3)
+        heatmap = np.expand_dims(heatmap, axis=2)
+        # Then repeat the channels
+        heatmap = np.repeat(heatmap, 3, axis=2)
+        heatmap[:, :, 1:] = 0
+        # Convert to PIL image
+        heatmap = Image.fromarray((heatmap * 255).astype(np.uint8))
+        # Resize
         heatmap = heatmap.resize(image_2.size)
-
-        # Overlay the heatmap on the right image
-        # Convert the heatmap to RGB with only the red channel
-        heatmap = heatmap.convert("RGB")
-        heatmap = heatmap.split()[0]
-        heatmap.putalpha(128)
-        image_2.paste(heatmap, (0, 0), heatmap)
-
+        # Add the heatmap values to the image and cap the values at 255
+        image_2 = Image.blend(image_2, heatmap, 0.5)
         return image_2
 
 

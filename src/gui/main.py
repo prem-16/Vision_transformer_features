@@ -18,7 +18,7 @@ image_directory = "images/test_images/"
 image_files, image_dirs = get_image_list(image_directory)
 
 model_manager = ModelGUIManager()
-model_manager.update_model("Test")
+model_manager.update_model("DinoViT")
 
 left_image_id = 0
 right_image_id = 0
@@ -161,7 +161,7 @@ model_label.pack()
 # Dropdown menu to select model
 model_options = list(MODEL_DICT.keys())
 model_variable = StringVar(settings_inner_frame)
-model_variable.set(model_options[0])
+model_variable.set(model_manager.model_name)
 model_dropdown = OptionMenu(settings_inner_frame, model_variable, *model_options)
 model_dropdown.config(bg=inner_frame_colour, highlightbackground=LIGHT_GREY, highlightthickness=0)
 model_dropdown.pack()
@@ -196,7 +196,8 @@ def populate_model_settings():
         # Populate the frame with the settings
         for setting_name, setting_dict in settings.items():
             # Create a label for the setting
-            setting_label = Label(model_settings_frame, text=f"{str(setting_name).capitalize()}:", bg=inner_frame_colour)
+            setting_label = Label(model_settings_frame, text=f"{str(setting_name).capitalize()}:",
+                                  bg=inner_frame_colour)
             # setting_label.pack(side=LEFT)
             setting_label.grid(row=row_id, column=0, padx=inner_x_pad * 4, pady=inner_y_pad)
 
@@ -208,35 +209,35 @@ def populate_model_settings():
                     orient=HORIZONTAL,
                     bg=inner_frame_colour,
                     highlightbackground=LIGHT_GREY,
-                    highlightthickness=0
+                    highlightthickness=0,
+                    resolution=setting_dict.get("step", 1)
                 )
                 setting_content.set(setting_dict["default"])
 
                 # Register the setting with the model manager
                 model_manager.apply_setting(setting_name, setting_dict["default"])
-
-                # Upon slider release, update the setting
-                def update_setting(event):
-                    model_manager.apply_setting(setting_name, setting_content.get())
-
-                setting_content.bind("<ButtonRelease-1>", update_setting)
+                setting_content.bind(
+                    "<ButtonRelease-1>",
+                    lambda event, n=setting_name, s=setting_content: model_manager.apply_setting(
+                        n, s.get()
+                    )
+                )
 
             elif setting_dict["type"] == "dropdown":
+
+                # Upon dropdown change, update the setting
                 setting_content = OptionMenu(
                     model_settings_frame,
                     StringVar(model_settings_frame, setting_dict["default"]),
-                    *setting_dict["options"]
+                    *setting_dict["options"],
+                    command=lambda event, n=setting_name, s=setting_content: model_manager.apply_setting(
+                        n, s.get()
+                    )
                 )
                 setting_content.config(bg=inner_frame_colour, highlightbackground=LIGHT_GREY, highlightthickness=0)
 
                 # Register the setting with the model manager
                 model_manager.apply_setting(setting_name, setting_dict["default"])
-
-                # Upon dropdown change, update the setting
-                def update_setting(*args):
-                    model_manager.apply_setting(setting_name, setting_content.get())
-
-                setting_content.bind("<ButtonRelease-1>", update_setting)
             else:
                 # Create label
                 setting_content = Label(model_settings_frame, text=f"Invalid type", bg=inner_frame_colour)
@@ -253,7 +254,9 @@ def populate_model_settings():
         empty_label = Label(model_settings_frame, text="Empty", bg=inner_frame_colour)
         empty_label.pack()
 
+
 populate_model_settings()
+
 
 # Upon changing the model from the dropdown, call model_manager and update the settings
 def model_dropdown_change(*args):
@@ -266,9 +269,9 @@ def model_dropdown_change(*args):
     # Update the settings
     populate_model_settings()
 
+
 # Set the trace on the model dropdown
 model_variable.trace("w", model_dropdown_change)
-
 
 # --- SETUP RIGHT FRAME --- #
 image_frame_width = (right_frame_width / 2) - inner_x_pad
@@ -288,15 +291,36 @@ left_image_frame.propagate(False)
 left_image_container = None
 left_image = None
 left_image_canvas = None
+left_image_width = None
+left_image_height = None
 
 
 # On clicking on the left_image_canvas (the image), draw a point on the image
 def left_image_canvas_click(event):
+    global left_image_canvas
     # Get the x and y coordinates of the click
-    x = event.x
-    y = event.y
-    # Draw a point on the image
-    left_image_canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill="red")
+    x = event.x / left_image_width
+    y = (event.y - ((image_frame_height / 2) - (left_image_height / 2))) / left_image_height
+
+    print("LEFT IMAGE HEIGHT", left_image_height)
+    print("IMAGE FRAME HEIGHT", image_frame_height)
+
+    if x > 0 and 0 < y < image_frame_height:
+        # Delete all children from canvas of type oval
+        left_image_container.destroy()
+        set_left_image(left_image_id)
+        # Draw a point on the image
+        left_image_canvas.create_oval(event.x - 5, event.y - 5, event.x + 5, event.y + 5, fill="red")
+
+        print(x, y)
+
+        new_right_image = model_manager.get_heatmap_vis((x, y))
+
+        # Empty the right image container
+        global right_image_container
+        right_image_container.destroy()
+
+        set_right_image(new_right_image)
 
 
 def set_left_image(image_id):
@@ -304,6 +328,9 @@ def set_left_image(image_id):
     global left_image_container
     global left_image
     global left_image_canvas
+    global left_image_width
+    global left_image_height
+    global model_manager
 
     left_image_container = Frame(
         left_image_frame,
@@ -313,17 +340,25 @@ def set_left_image(image_id):
     )
     left_image_container.pack(expand=True, fill=BOTH)
 
+    image_dir = image_dirs[image_id]
+
+    # Set the image_dir in the model_manager
+    model_manager.image_dir_1 = image_dir
+
     # Create image and add to left_image_container. Set image width to image_frame_width
-    pil_image = Image.open(image_dirs[image_id])
+    pil_image = Image.open(image_dir)
     # Resize image to fit image_frame_width but respect height ratio
     pil_image = pil_image.resize((int(image_frame_width), int(image_frame_width * pil_image.height / pil_image.width)))
 
     left_image = ImageTk.PhotoImage(pil_image)
+    left_image_width = left_image.width()
+    left_image_height = left_image.height()
     # left_image_label = Label(left_image_container, image=left_image)
     # left_image_label.pack(expand=True, fill=BOTH)
 
     # Create canvas with image as background
     left_image_canvas = Canvas(left_image_container, width=pil_image.width, height=pil_image.height)
+    print("LEFT PIL IMAGE HEIGHT IS", pil_image.height)
     left_image_canvas.pack(expand=True, fill=BOTH)
     # left_image_label.create_image(0, 0, image=left_image, anchor=NW)
     # CENTER THE IMAGE
@@ -349,7 +384,6 @@ left_list_box.bind("<<ListboxSelect>>", left_list_box_selection_change)
 
 set_left_image(left_image_id)
 
-
 # --- --- SETUP RIGHT IMAGE FRAME --- #
 right_image_frame = Frame(
     right_frame,
@@ -364,11 +398,12 @@ right_image = None
 right_image_label = None
 
 
-def set_right_image(image_id):
+def set_right_image(pil_image):
     # I don't like this, but it has to be like this.
     global right_image_container
     global right_image
     global right_image_label
+    global model_manager
 
     right_image_container = Frame(
         right_image_frame,
@@ -378,8 +413,6 @@ def set_right_image(image_id):
     )
     right_image_container.pack(expand=True, fill=BOTH)
 
-    # Create image and add to right_image_container. Set image width to image_frame_width
-    pil_image = Image.open(image_dirs[image_id])
     # Resize image to fit image_frame_width but respect height ratio
     pil_image = pil_image.resize((int(image_frame_width), int(image_frame_width * pil_image.height / pil_image.width)))
 
@@ -388,7 +421,15 @@ def set_right_image(image_id):
     right_image_label.pack(expand=True, fill=BOTH)
 
 
-set_right_image(right_image_id)
+def set_right_image_by_id(image_id):
+    image_dir = image_dirs[image_id]
+    # Set the image_dir in the model_manager
+    model_manager.image_dir_2 = image_dir
+
+    set_right_image(Image.open(image_dir))
+
+
+set_right_image_by_id(right_image_id)
 
 
 # On right list box selection change, update right image
@@ -401,10 +442,9 @@ def right_list_box_selection_change(event):
     # Empty the right image container
     right_image_container.destroy()
     right_image_id = right_list_box.curselection()[0]
-    set_right_image(right_image_id)
+    set_right_image_by_id(right_image_id)
 
 
 right_list_box.bind("<<ListboxSelect>>", right_list_box_selection_change)
-
 
 mainloop()
