@@ -38,6 +38,12 @@ def parse_args():
 
     return args
 
+def store_data(data, datasets_dir="./data_observation"):
+    if not os.path.exists(datasets_dir):
+        os.mkdir(datasets_dir)
+    data_file = os.path.join(datasets_dir, "data.pkl.gzip")
+    f = gzip.open(data_file, 'wb')
+    pickle.dump(data, f)
 
 def main():
     make_box_space_readable()
