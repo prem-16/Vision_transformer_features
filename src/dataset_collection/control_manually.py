@@ -2,6 +2,7 @@ import argparse
 
 import gym
 import numpy as np
+from PIL import Image
 
 from mani_skill2 import make_box_space_readable
 from mani_skill2.envs.sapien_env import BaseEnv
@@ -87,6 +88,7 @@ def main():
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
     gripper_action = 1
     EE_ACTION = 0.1
+    counter = 0
 
     while True:
         # -------------------------------------------------------------------------- #
@@ -240,6 +242,12 @@ def main():
             action = env.agent.controller.from_action_dict(action_dict)
 
         obs, reward, done, info = env.step(action)
+
+        if key == "8":
+            counter +=1
+            img_array = obs['image']['hand_camera']['rgb']
+            img = Image.fromarray(img_array)
+            img.save(f"test_{counter}.png")
         print("reward", reward)
         print("done", done)
         print("info", info)
