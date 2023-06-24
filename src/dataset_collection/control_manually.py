@@ -8,7 +8,9 @@ from mani_skill2 import make_box_space_readable
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.utils.visualization.cv2_utils import OpenCVViewer
 from mani_skill2.utils.wrappers import RecordEpisode
-
+import gzip
+import os
+import pickle
 
 MS1_ENV_IDS = [
     "OpenCabinetDoor-v1",
@@ -37,6 +39,16 @@ def parse_args():
     args.env_kwargs = env_kwargs
 
     return args
+
+
+def store_data(data, datasets_dir="./test_data"):
+    # save data
+    if not os.path.exists(datasets_dir):
+        os.mkdir(datasets_dir)
+    data_file = os.path.join(datasets_dir, 'data.pkl.gzip')
+    f = gzip.open(data_file, 'wb')
+    pickle.dump(data, f)
+    f.close()
 
 
 def main():
@@ -90,6 +102,13 @@ def main():
     EE_ACTION = 0.1
     counter = 0
 
+    samples = {
+        "image_rgb": [],
+        "extrinsic": [],
+        "intrinsic": [],
+        "depth": [],
+        "name": [],
+    }
     while True:
         # -------------------------------------------------------------------------- #
         # Visualization
@@ -246,8 +265,16 @@ def main():
         if key == "8":
             counter +=1
             img_array = obs['image']['hand_camera']['rgb']
-            img = Image.fromarray(img_array)
-            img.save(f"test_{counter}.png")
+            samples['intrinsic'].append(obs['camera_param']['hand_camera']['intrinsic_cv'])
+            samples['extrinsic'].append(obs['camera_param']['hand_camera']['extrinsic_cv'])
+            samples['image_rgb'].append(img_array)
+            samples['depth'].append(obs['image']['hand_camera']['depth'])
+            samples['name'].append("test_"+str(counter))
+            print("image data recorded", samples['name'][-1])
+        if key == "s":
+            store_data(samples, "./test_data")
+            print("data stored")
+        print(obs['camera_param']['hand_camera']['intrinsic_cv'])
         print("reward", reward)
         print("done", done)
         print("info", info)
