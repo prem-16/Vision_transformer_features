@@ -15,7 +15,7 @@ width = 1200
 height = 600
 master.geometry("{}x{}".format(width, height))
 
-image_directory = "images/test_images/"
+image_directory = "images/test_images"
 image_files, image_dirs = get_image_list(image_directory)
 
 model_manager = ModelGUIManager()

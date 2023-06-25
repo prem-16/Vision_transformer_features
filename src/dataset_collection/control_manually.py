@@ -14,6 +14,9 @@ from mani_skill2.utils.wrappers import RecordEpisode
 from mani_skill2 import ASSET_DIR
 from mani_skill2.utils.registration import register_env
 from mani_skill2.envs.pick_and_place.pick_cube import PickCubeEnv
+import gzip
+import os
+import pickle
 
 MS1_ENV_IDS = [
     "OpenCabinetDoor-v1",
@@ -42,13 +45,6 @@ def parse_args():
     args.env_kwargs = env_kwargs
 
     return args
-
-def store_data(data, datasets_dir="./data_observation"):
-    if not os.path.exists(datasets_dir):
-        os.mkdir(datasets_dir)
-    data_file = os.path.join(datasets_dir, "data.pkl.gzip")
-    f = gzip.open(data_file, 'wb')
-    pickle.dump(data, f)
 
 def show_camera_view(obs_camera, title):
     rgb, depth = obs_camera['rgb'], obs_camera['depth']
@@ -115,6 +111,16 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         cam_cfg.fov = 1.5
         return cam_cfg
 
+def store_data(data, datasets_dir="./test_data"):
+    # save data
+    if not os.path.exists(datasets_dir):
+        os.mkdir(datasets_dir)
+    data_file = os.path.join(datasets_dir, 'data.pkl.gzip')
+    f = gzip.open(data_file, 'wb')
+    pickle.dump(data, f)
+    f.close()
+
+
 def main():
     make_box_space_readable()
     np.set_printoptions(suppress=True, precision=3)
@@ -178,6 +184,13 @@ def main():
     EE_ACTION = 0.1
     counter = 0
 
+    samples = {
+        "image_rgb": [],
+        "extrinsic": [],
+        "intrinsic": [],
+        "depth": [],
+        "name": [],
+    }
     while True:
         # -------------------------------------------------------------------------- #
         # Visualization
@@ -334,9 +347,16 @@ def main():
         if key == "8":
             counter +=1
             img_array = obs['image']['hand_camera']['rgb']
-            img = Image.fromarray(img_array)
-            img.save(f"test_{counter}.png")
-        
+            samples['intrinsic'].append(obs['camera_param']['hand_camera']['intrinsic_cv'])
+            samples['extrinsic'].append(obs['camera_param']['hand_camera']['extrinsic_cv'])
+            samples['image_rgb'].append(img_array)
+            samples['depth'].append(obs['image']['hand_camera']['depth'])
+            samples['name'].append("test_"+str(counter))
+            print("image data recorded", samples['name'][-1])
+        if key == "s":
+            store_data(samples, "./test_data")
+            print("data stored")
+        print(obs['camera_param']['hand_camera']['intrinsic_cv'])
         print("reward", reward)
         print("done", done)
         print("info", info)
