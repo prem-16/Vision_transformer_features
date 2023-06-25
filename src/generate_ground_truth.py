@@ -36,7 +36,7 @@ def transform_points(image1_data, image2_data , image1_points):
     """
 
     # # Transform the points
-    depth = float( image1_data['depth'][image1_points[0]][image1_points[1]])
+    depth = float( image1_data['depth'][image1_points[1]][image1_points[0]])
     image1_points_h = np.array([image1_points[0]*depth, image1_points[1]*depth, depth])
     image1_points_camera = np.matmul(np.linalg.inv(image1_data['intrinsic']), image1_points_h)
     image1_points_camera_h = np.append( image1_points_camera, 1)
@@ -56,12 +56,13 @@ if __name__ == "__main__":
     image1_data, img1 = read_data(datasets_dir="./test_data", index=0)
 
     r = cv2.selectROI("select the object", image1_data['image_rgb'])
+    cv2.destroyAllWindows()
     image1_points = np.array([[r[0], r[1]],
                               [r[0] + r[2], r[1]],
                               [r[0] + r[2], r[1] + r[3]],
                               [r[0], r[1] + r[3]]])
 
-    image2_data, img2 = read_data(datasets_dir="./test_data", index=5)
+    image2_data, img2 = read_data(datasets_dir="./test_data", index=8)
     image2_points = np.zeros((4, 2))
     for i,image1_point in enumerate(image1_points):
 
