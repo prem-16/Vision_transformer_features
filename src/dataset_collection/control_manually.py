@@ -58,7 +58,7 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         # Load YCB objects 
         # It is the same as in PickSingleYCB-v0, just for illustration here
         builder = self._scene.create_actor_builder()
-        model_dir = ASSET_DIR / "mani_skill2_ycb/models/011_banana"
+        model_dir = ASSET_DIR / "mani_skill2_ycb/models/011_banana" # change object here
         scale = self.cube_half_size / 0.01887479572529618
         collision_file = str(model_dir / "collision.obj")
         builder.add_multiple_collisions_from_file(
@@ -76,23 +76,22 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         # -------------------------------------------------------------------------- #
         builder = self._scene.create_actor_builder()
         path = f"{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
-        #path = f"{ASSET_DIR}/hab2_bench_assets/stages/frl_apartment_stage_pvizplan_empty.glb"
         pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         # NOTE: use nonconvex collision for static scene
         builder.add_nonconvex_collision_from_file(path, pose)
         builder.add_visual_from_file(path, pose)
         self.arena = builder.build_static()
-        # Add offset so that the workspace is on the table
-        #offset = np.array([-1.9, 2, 0.9]) # another shelf awkward angle 
-        #offset = np.array([0.7, 0, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
+        # Add offset to place the workspace at...
+        #offset = np.array([-1.9, 2, 0.9]) # another shelf (awkward angle, need to rotate camera) 
+        #offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
         #offset = np.array([2.3, 1.4, 0.5]) # stairs
-        #offset = np.array([-1.5, -1, 0.5]) # carpet
+        #offset = np.array([-1.5, -1, 0.3]) # carpet
         #offset = np.array([3.8, -0.8, 0.8]) # blue shelf
-        #offset = np.array([2.5, -6.5, 0.9]) # shelf 
+        #offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera) 
         #offset = np.array([1.3, 3.7, 0.5]) # dark room
         #offset = np.array([4.2, 0.5, 0.8]) # bicycle
         #offset = np.array([4.1, -5.3, 0.9]) # corner of a sofa 
-        offset = np.array([2.5, -5, 0.9]) # shelf 
+        #offset = np.array([2.5, -5, 0.9]) # carpet 
         self.arena.set_pose(sapien.Pose(-offset))
 
     def initialize_episode(self):
@@ -100,7 +99,6 @@ class PickYCBInReplicaCAD(PickCubeEnv):
 
         # Rotate the robot for better visualization
         self.agent.robot.set_pose(
-            # sapien.Pose([0, -0.56, 0], [0.707, 0, 0, 0.707]) #original
             sapien.Pose([0, -0.56, 0], [0.707, 0, 0, 0.707]) #original
 
         )
@@ -130,7 +128,7 @@ def main():
         if args.control_mode is not None and not args.control_mode.startswith("base"):
             args.control_mode = "base_pd_joint_vel_arm_" + args.control_mode
     
-    env: BaseEnv = gym.make(
+    env: BaseEnv = gym.make( # default background
         args.env_id,
         obs_mode=args.obs_mode,
         #model_ids="002_master_chef_can", # Only for PickYCB
@@ -142,14 +140,14 @@ def main():
         #bg_name="minimal_bedroom", # optional background
         **args.env_kwargs
     )
-    
-    env = gym.make(
+     
+    env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if want to use default background) 
         "PickYCBInReplicaCAD-v0", 
         obs_mode=args.obs_mode,
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
         **args.env_kwargs)
-
+    
     record_dir = args.record_dir
     if record_dir:
         record_dir = record_dir.format(env_id=args.env_id)
@@ -360,14 +358,11 @@ def main():
         print("reward", reward)
         print("done", done)
         print("info", info)
-        #print('int', obs['camera_param']['hand_camera']['intrinsic_cv'])
         #print('ext', obs['camera_param']['hand_camera']['extrinsic_cv'])
         #print('obs extra', obs['extra'])
         print('obs', obs['agent'])
     
     
-    #tcp_pose = obs['extra']['tcp_pose']
-    #goal_pose = obs['extra']['goal_pos']
     print('obs', obs)
     
 
