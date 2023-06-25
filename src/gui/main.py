@@ -2,6 +2,7 @@ from tkinter import *
 from PIL import Image
 
 from PIL import ImageTk
+import sys
 
 from src.gui.helpers import get_image_list
 from src.models.model_gui_manager import ModelGUIManager
