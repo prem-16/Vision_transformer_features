@@ -81,11 +81,11 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         builder.add_nonconvex_collision_from_file(path, pose)
         builder.add_visual_from_file(path, pose)
         self.arena = builder.build_static()
-        # Add offset to place the workspace at...
+        # Add offset to place the workspace at... (uncomment the background you want and comment the other offset)
         #offset = np.array([-1.9, 2, 0.9]) # another shelf (awkward angle, need to rotate camera) 
         #offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
         #offset = np.array([2.3, 1.4, 0.5]) # stairs
-        #offset = np.array([-1.5, -1, 0.3]) # carpet
+        offset = np.array([-1.5, -1, 0.3]) # carpet
         #offset = np.array([3.8, -0.8, 0.8]) # blue shelf
         #offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera) 
         #offset = np.array([1.3, 3.7, 0.5]) # dark room
@@ -127,8 +127,8 @@ def main():
     if args.env_id in MS1_ENV_IDS:
         if args.control_mode is not None and not args.control_mode.startswith("base"):
             args.control_mode = "base_pd_joint_vel_arm_" + args.control_mode
-    
-    env: BaseEnv = gym.make( # default background
+ 
+    env: BaseEnv = gym.make( # default background (comment it out if you want to use custom background)
         args.env_id,
         obs_mode=args.obs_mode,
         #model_ids="002_master_chef_can", # Only for PickYCB
@@ -140,8 +140,9 @@ def main():
         #bg_name="minimal_bedroom", # optional background
         **args.env_kwargs
     )
-     
-    env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if want to use default background) 
+    
+    
+    env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if you want to use default background) 
         "PickYCBInReplicaCAD-v0", 
         obs_mode=args.obs_mode,
         reward_mode=args.reward_mode,
