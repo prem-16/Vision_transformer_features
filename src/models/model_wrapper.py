@@ -62,13 +62,6 @@ class ModelWrapperBase(ABC):
 
     def get_heatmap(self, point):
         """
-        Compute the heatmap of the second image using an annotated point from the first image.
-        :return: A heatmap of the similarities of numpy array type.
-        """
-        raise NotImplementedError("Not implemented!")
-
-    def get_heatmap(self, point):
-        """
         Get heatmap / activation map for the second image.
         Seperate to get_heatmap_vis as this may be overrided.
         :param point: The point in the first image.
