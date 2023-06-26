@@ -238,6 +238,26 @@ def populate_model_settings():
 
                 # Register the setting with the model manager
                 model_manager.apply_setting(setting_name, setting_dict["default"])
+
+            elif setting_dict["type"] == "text":
+
+                # Create a text entry box
+                setting_content = Entry(
+                    model_settings_frame,
+                    bg=inner_frame_colour,
+                    highlightbackground=LIGHT_GREY,
+                    highlightthickness=0
+                )
+                setting_content.insert(0, setting_dict["default"])
+
+                # Upon text change, update the setting
+                setting_content.bind(
+                    "<KeyRelease>",
+                    lambda event, n=setting_name, s=setting_content: model_manager.apply_setting(
+                        n, s.get()
+                    )
+                )
+
             else:
                 # Create label
                 setting_content = Label(model_settings_frame, text=f"Invalid type", bg=inner_frame_colour)
@@ -365,6 +385,8 @@ def set_left_image(image_id):
     left_image_canvas.create_image(image_frame_width / 2, image_frame_height / 2, image=left_image, anchor=CENTER)
 
     left_image_canvas.bind("<Button-1>", left_image_canvas_click)
+    # On drag event, draw a point on the image
+    left_image_canvas.bind("<B1-Motion>", left_image_canvas_click)
 
 
 # On left list box selection change, update left image
