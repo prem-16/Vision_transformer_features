@@ -1,6 +1,5 @@
 setuptools==65.5.0
 gym==0.21.0
-# torch==1.11.0
 numpy==1.23.5
 tensorboard==1.15.0
 matplotlib==3.7.1
@@ -8,8 +7,21 @@ mani_skill2
 pillow==9.5.0
 tqdm==4.65.0
 scikit-learn==1.2.0
-torchvision==0.15.2
 timm==0.6.13
 pyglet==2.0.7
 sklearn
 opencv-python~=4.7.0.72
+# torch==1.11.0
+# torchvision==0.15.2
+
+# For DIFT
+accelerate==0.19.0
+diffusers==0.15.0
+xformers==0.0.20
+protobuf==3.20.3
+# GPU torch version windows
+# (2.0.x is required for DIFT)
+-f https://download.pytorch.org/whl/torch_stable.html
+torch==2.0.1+cu118
+torchvision
+torchaudio

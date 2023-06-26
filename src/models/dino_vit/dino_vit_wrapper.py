@@ -26,7 +26,7 @@ class DinoVITWrapper(ModelWrapperBase):
             "type": "slider",
             "min": 1,
             "max": 11,
-            "default": 4
+            "default": 9
         },
         "facet": {
             "type": "dropdown",
@@ -54,6 +54,31 @@ class DinoVITWrapper(ModelWrapperBase):
         super().__init__()
         self._cache = {}
 
+    @staticmethod
+    def _compute_descriptors(image_dir, **kwargs):
+        """
+        Computes the descriptors for the image.
+        :param image_dir: The directory of the image.
+        :param kwargs: A dictionary of settings for the model.
+        :return: descriptors and dictionary of other information.
+        """
+        with torch.no_grad():
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            if kwargs.get('model', None) is None:
+                extractor = ViTExtractor(kwargs['model_type'], kwargs['stride'], device=device)
+            else:
+                extractor = kwargs['model']
+            image_batch, image_pil = extractor.preprocess(image_dir, kwargs['load_size'])
+            descriptors = extractor.extract_descriptors(image_batch.to(device), kwargs['layer'], kwargs['facet'], True)
+            num_patches, load_size = extractor.num_patches, extractor.load_size
+
+        return descriptors, {
+            "num_patches": num_patches,
+            "load_size": load_size,
+            "image_batch": image_batch,
+            "image_pil": image_pil
+        }
+
     def _get_descriptor_similarity(self, image_dir_1, image_dir_2, settings=None):
         """
         Computed the cosine similarity between the descriptors of the two images.
@@ -69,40 +94,27 @@ class DinoVITWrapper(ModelWrapperBase):
             # extracting descriptors for each image
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
             extractor = ViTExtractor(settings['model_type'], settings['stride'], device=device)
-            image1_batch, image1_pil = extractor.preprocess(image_dir_1, settings['load_size'])
-            descriptors1 = extractor.extract_descriptors(image1_batch.to(device), settings['layer'], settings['facet'], True)
-            num_patches1, load_size1 = extractor.num_patches, extractor.load_size
-            image2_batch, image2_pil = extractor.preprocess(image_dir_2, settings['load_size'])
-            descriptors2 = extractor.extract_descriptors(image2_batch.to(device), settings['layer'], settings['facet'], True)
-            num_patches2, load_size2 = extractor.num_patches, extractor.load_size
 
-            # extracting saliency maps for each image
-            saliency_map1 = extractor.extract_saliency_maps(image1_batch.to(device))[0]
-            saliency_map2 = extractor.extract_saliency_maps(image2_batch.to(device))[0]
-            # threshold saliency maps to get fg / bg masks
-            fg_mask1 = saliency_map1 > settings['threshold']
-            fg_mask2 = saliency_map2 > settings['threshold']
+            # Compute the descriptors
+            descriptors_1, other_info_1 = self._compute_descriptors(image_dir_1, model=extractor, **settings)
+            descriptors_2, other_info_2 = self._compute_descriptors(image_dir_2, model=extractor, **settings)
+
+            # # extracting saliency maps for each image
+            # saliency_map_1 = extractor.extract_saliency_maps(other_info_1['image_batch'].to(device))[0]
+            # saliency_map_2 = extractor.extract_saliency_maps(other_info_2['image_batch'].to(device))[0]
+            # # threshold saliency maps to get fg / bg masks
+            # fg_mask_1 = saliency_map_1 > settings['threshold']
+            # fg_mask_2 = saliency_map_2 > settings['threshold']
 
             # calculate similarity between image1 and image2 descriptors
-            similarities = chunk_cosine_sim(descriptors1, descriptors2)
+            similarities = self._compute_similarity(descriptors_1, descriptors_2)
 
         return {
-            "descriptors1": descriptors1,
-            "descriptors2": descriptors2,
-            "saliency_map1": saliency_map1,
-            "saliency_map2": saliency_map2,
-            "fg_mask1": fg_mask1,
-            "fg_mask2": fg_mask2,
+            "descriptors1": descriptors_1,
+            "descriptors2": descriptors_2,
             "similarities": similarities,
-            "num_patches1": num_patches1,
-            "num_patches2": num_patches2,
-            "load_size1": load_size1,
-            "load_size2": load_size2,
-            "image1_batch": image1_batch,
-            "image2_batch": image2_batch,
-            "image1_pil": image1_pil,
-            "image2_pil": image2_pil,
-            "extractor": extractor
+            "num_patches_1": other_info_1['num_patches'],
+            "num_patches_2": other_info_2['num_patches']
         }
 
     def process_image_pair(self, image_dir_1, image_dir_2, settings=None):
@@ -115,29 +127,11 @@ class DinoVITWrapper(ModelWrapperBase):
         """
         self._cache = self._get_descriptor_similarity(image_dir_1, image_dir_2, settings)
 
-    def _get_descriptor_index_from_point(self, point, load_size, num_patches):
-        """
-        Converts a point in the image to a descriptor index.
-        :param point: The point in the image.
-        :param load_size: The size of the image.
-        :param num_patches: The number of patches in the image.
-        :return: The descriptor index.
-        """
-        point_x, point_y = point
-
-        # Turn image pixel point to descriptor map point
-        point_x = point_x * num_patches[1]
-        point_y = point_y * num_patches[0]
-
-        # Get the descriptor map point's index
-        point_index = int(point_y) * num_patches[1] + int(point_x)
-        return point_index
-
     def get_heatmap(self, point):
 
         # Get the annotated descriptor index
         descriptor_index = self._get_descriptor_index_from_point(
-            point, self._cache['load_size1'], self._cache['num_patches1']
+            point, self._cache['num_patches_1']
         )
 
         # Filter similarity map to only show the similarity of the annotated descriptor
@@ -154,7 +148,7 @@ class DinoVITWrapper(ModelWrapperBase):
         )
 
         # Convert the similarity map to a heatmap
-        heatmap = similarity_map.view(self._cache['num_patches2']).cpu().numpy()
+        heatmap = similarity_map.view(self._cache['num_patches_2']).cpu().numpy()
 
         return heatmap
 
