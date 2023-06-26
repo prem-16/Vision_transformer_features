@@ -24,7 +24,7 @@ def read_data(datasets_dir="./test_data", index=0):
         "intrinsic": data['intrinsic'][index],
         "depth": data['depth'][index],
     }
-    return sample , img
+    return sample, img
 
 def transform_points(image1_data, image2_data , image1_points):
     """
@@ -50,6 +50,11 @@ def transform_points(image1_data, image2_data , image1_points):
    
     return image2_points
 
+def create_ground_truth_map(image_points , image):
+    gt_map = np.zeros(image.shape)
+    for image_point in image_points:
+        gt_map[int(image_point[1])][int(image_point[0])] = 1
+    return gt_map
 
 if __name__ == "__main__":
 
@@ -62,7 +67,7 @@ if __name__ == "__main__":
                               [r[0] + r[2], r[1] + r[3]],
                               [r[0], r[1] + r[3]]])
 
-    image2_data, img2 = read_data(datasets_dir="./test_data", index=8)
+    image2_data, img2 = read_data(datasets_dir="./test_data", index=2)
     image2_points = np.zeros((4, 2))
     for i,image1_point in enumerate(image1_points):
 
@@ -72,7 +77,7 @@ if __name__ == "__main__":
     print(image1_points[:, 0])
     plt.scatter(image1_points[:, 0], image1_points[:, 1], c='r', marker='x')
     plt.show()
-
+    gt_map_image2 = create_ground_truth_map(image2_points, image2_data['image_rgb'])
     plt.imshow(image2_data['image_rgb'])
     plt.scatter(image2_points[:, 0], image2_points[:, 1], c='r', marker='x')
     plt.show()
