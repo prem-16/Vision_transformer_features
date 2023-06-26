@@ -2,12 +2,21 @@ import argparse
 
 import gym
 import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+import json
 
+import sapien.core as sapien
 from mani_skill2 import make_box_space_readable
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.utils.visualization.cv2_utils import OpenCVViewer
 from mani_skill2.utils.wrappers import RecordEpisode
-
+from mani_skill2 import ASSET_DIR
+from mani_skill2.utils.registration import register_env
+from mani_skill2.envs.pick_and_place.pick_cube import PickCubeEnv
+import gzip
+import os
+import pickle
 
 MS1_ENV_IDS = [
     "OpenCabinetDoor-v1",
@@ -37,6 +46,78 @@ def parse_args():
 
     return args
 
+def show_camera_view(obs_camera, title):
+    rgb, depth = obs_camera['rgb'], obs_camera['depth']
+    plt.imshow(rgb) # for color
+    #plt.imshow(depth[:,:, 0], cmap="gray") # for gray scale
+    plt.show()
+
+@register_env("PickYCBInReplicaCAD-v0", max_episode_steps=200, override=True)
+class PickYCBInReplicaCAD(PickCubeEnv):
+    def _load_actors(self):
+        # Load YCB objects 
+        # It is the same as in PickSingleYCB-v0, just for illustration here
+        builder = self._scene.create_actor_builder()
+        model_dir = ASSET_DIR / "mani_skill2_ycb/models/011_banana" # change object here
+        scale = self.cube_half_size / 0.01887479572529618
+        collision_file = str(model_dir / "collision.obj")
+        builder.add_multiple_collisions_from_file(
+            filename=collision_file, scale=scale, density=1000
+        )
+        visual_file = str(model_dir / "textured.obj")
+        builder.add_visual_from_file(filename=visual_file, scale=scale)
+        self.obj = builder.build(name="apple")
+
+        # Add a goal indicator (visual only)
+        self.goal_site = self._build_sphere_site(self.goal_thresh)
+
+        # -------------------------------------------------------------------------- #
+        # Load static scene
+        # -------------------------------------------------------------------------- #
+        builder = self._scene.create_actor_builder()
+        path = f"{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
+        pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
+        # NOTE: use nonconvex collision for static scene
+        builder.add_nonconvex_collision_from_file(path, pose)
+        builder.add_visual_from_file(path, pose)
+        self.arena = builder.build_static()
+        # Add offset to place the workspace at... (uncomment the background you want and comment the other offset)
+        #offset = np.array([-1.9, 2, 0.9]) # another shelf (awkward angle, need to rotate camera) 
+        #offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
+        #offset = np.array([2.3, 1.4, 0.5]) # stairs
+        offset = np.array([-1.5, -1, 0.3]) # carpet
+        #offset = np.array([3.8, -0.8, 0.8]) # blue shelf
+        #offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera) 
+        #offset = np.array([1.3, 3.7, 0.5]) # dark room
+        #offset = np.array([4.2, 0.5, 0.8]) # bicycle
+        #offset = np.array([4.1, -5.3, 0.9]) # corner of a sofa 
+        #offset = np.array([2.5, -5, 0.9]) # carpet 
+        self.arena.set_pose(sapien.Pose(-offset))
+
+    def initialize_episode(self):
+        super().initialize_episode()
+
+        # Rotate the robot for better visualization
+        self.agent.robot.set_pose(
+            sapien.Pose([0, -0.56, 0], [0.707, 0, 0, 0.707]) #original
+
+        )
+
+    def _register_render_cameras(self):
+        cam_cfg = super()._register_render_cameras()
+        cam_cfg.p = cam_cfg.p + [0.5, 0.5, -0.095]
+        cam_cfg.fov = 1.5
+        return cam_cfg
+
+def store_data(data, datasets_dir="./test_data"):
+    # save data
+    if not os.path.exists(datasets_dir):
+        os.mkdir(datasets_dir)
+    data_file = os.path.join(datasets_dir, 'data.pkl.gzip')
+    f = gzip.open(data_file, 'wb')
+    pickle.dump(data, f)
+    f.close()
+
 
 def main():
     make_box_space_readable()
@@ -46,15 +127,28 @@ def main():
     if args.env_id in MS1_ENV_IDS:
         if args.control_mode is not None and not args.control_mode.startswith("base"):
             args.control_mode = "base_pd_joint_vel_arm_" + args.control_mode
-
-    env: BaseEnv = gym.make(
+ 
+    env: BaseEnv = gym.make( # default background (comment it out if you want to use custom background)
         args.env_id,
+        obs_mode=args.obs_mode,
+        #model_ids="002_master_chef_can", # Only for PickYCB
+        reward_mode=args.reward_mode,
+        control_mode=args.control_mode,
+        #camera_cfgs={"add_segmentation": True}, 
+        #shader_dir="rt", # only if PC supports ray tracing
+        #render_config={"rt_samples_per_pixel": 2, "rt_use_denoiser": False}, # only if PC supports ray tracing
+        #bg_name="minimal_bedroom", # optional background
+        **args.env_kwargs
+    )
+    
+    
+    env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if you want to use default background) 
+        "PickYCBInReplicaCAD-v0", 
         obs_mode=args.obs_mode,
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
-        **args.env_kwargs
-    )
-
+        **args.env_kwargs)
+    
     record_dir = args.record_dir
     if record_dir:
         record_dir = record_dir.format(env_id=args.env_id)
@@ -87,7 +181,15 @@ def main():
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
     gripper_action = 1
     EE_ACTION = 0.1
+    counter = 0
 
+    samples = {
+        "image_rgb": [],
+        "extrinsic": [],
+        "intrinsic": [],
+        "depth": [],
+        "name": [],
+    }
     while True:
         # -------------------------------------------------------------------------- #
         # Visualization
@@ -240,9 +342,32 @@ def main():
             action = env.agent.controller.from_action_dict(action_dict)
 
         obs, reward, done, info = env.step(action)
+        
+        if key == "8":
+            counter +=1
+            img_array = obs['image']['hand_camera']['rgb']
+            samples['intrinsic'].append(obs['camera_param']['hand_camera']['intrinsic_cv'])
+            samples['extrinsic'].append(obs['camera_param']['hand_camera']['extrinsic_cv'])
+            samples['image_rgb'].append(img_array)
+            samples['depth'].append(obs['image']['hand_camera']['depth'])
+            samples['name'].append("test_"+str(counter))
+            print("image data recorded", samples['name'][-1])
+        if key == "s":
+            store_data(samples, "./test_data")
+            print("data stored")
+        print(obs['camera_param']['hand_camera']['intrinsic_cv'])
         print("reward", reward)
         print("done", done)
         print("info", info)
+        #print('ext', obs['camera_param']['hand_camera']['extrinsic_cv'])
+        #print('obs extra', obs['extra'])
+        print('obs', obs['agent'])
+    
+    
+    print('obs', obs)
+    
+
+    show_camera_view(obs["image"]["hand_camera"], "Hand Camera View")
 
     env.close()
 

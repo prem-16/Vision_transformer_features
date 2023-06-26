@@ -2,6 +2,7 @@ from tkinter import *
 from PIL import Image
 
 from PIL import ImageTk
+import sys
 
 from src.gui.helpers import get_image_list
 from src.models.model_gui_manager import ModelGUIManager
@@ -14,7 +15,7 @@ width = 1200
 height = 600
 master.geometry("{}x{}".format(width, height))
 
-image_directory = "images/test_images/"
+image_directory = "images/test_images"
 image_files, image_dirs = get_image_list(image_directory)
 
 model_manager = ModelGUIManager()
