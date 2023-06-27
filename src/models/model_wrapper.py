@@ -118,5 +118,5 @@ class ModelWrapperBase(ABC):
         heatmap = heatmap.resize(image_2.size)
         # Add the heatmap values to the image and cap the values at 255
         image_2 = Image.blend(image_2, heatmap, 0.5)
-        return image_2
+        return image_2 , heatmap
 

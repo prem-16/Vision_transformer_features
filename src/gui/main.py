@@ -335,10 +335,10 @@ def left_image_canvas_click(event):
         set_left_image(left_image_id)
         # Draw a point on the image
         left_image_canvas.create_oval(event.x - 5, event.y - 5, event.x + 5, event.y + 5, fill="red")
-
+        print("choosing point")
         print(x, y)
 
-        new_right_image = model_manager.get_heatmap_vis((x, y))
+        new_right_image, _ = model_manager.get_heatmap_vis((x, y))
 
         # Empty the right image container
         global right_image_container
