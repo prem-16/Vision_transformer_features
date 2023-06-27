@@ -64,6 +64,7 @@ class DinoVITWrapper(ModelWrapperBase):
         """
         with torch.no_grad():
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            print(device)
             if kwargs.get('model', None) is None:
                 extractor = ViTExtractor(kwargs['model_type'], kwargs['stride'], device=device)
             else:

@@ -1,7 +1,7 @@
 import torch
 from PIL import Image
 from torchvision.transforms import PILToTensor
-from models.dift.dift_sd import SDFeaturizer
+from src.models.dift.dift_sd import SDFeaturizer
 
 from src.models.model_wrapper import ModelWrapperBase
 

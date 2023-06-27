@@ -4,7 +4,7 @@ from PIL import Image
 from PIL import ImageTk
 import sys
 
-from src.gui.helpers import get_image_list
+from src.gui.helpers import get_image_list , read_data
 from src.models.model_gui_manager import ModelGUIManager
 from src.models.model_wrapper_list import MODEL_DICT
 
@@ -18,6 +18,9 @@ master.geometry("{}x{}".format(width, height))
 image_directory = "images/test_images"
 image_files, image_dirs = get_image_list(image_directory)
 
+image_data = read_data(datasets_dir="./test_data")
+
+# = image_data["image_rgb"]
 model_manager = ModelGUIManager()
 model_manager.update_model("DinoViT")
 
