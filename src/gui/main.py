@@ -4,7 +4,7 @@ from PIL import Image
 from PIL import ImageTk
 import sys
 
-from src.gui.helpers import get_image_list
+from src.gui.helpers import get_image_list , read_data
 from src.models.model_gui_manager import ModelGUIManager
 from src.models.model_wrapper_list import MODEL_DICT
 
@@ -18,6 +18,9 @@ master.geometry("{}x{}".format(width, height))
 image_directory = "images/test_images"
 image_files, image_dirs = get_image_list(image_directory)
 
+image_data = read_data(datasets_dir="./test_data")
+
+# = image_data["image_rgb"]
 model_manager = ModelGUIManager()
 model_manager.update_model("DinoViT")
 
@@ -332,10 +335,10 @@ def left_image_canvas_click(event):
         set_left_image(left_image_id)
         # Draw a point on the image
         left_image_canvas.create_oval(event.x - 5, event.y - 5, event.x + 5, event.y + 5, fill="red")
-
+        print("choosing point")
         print(x, y)
 
-        new_right_image = model_manager.get_heatmap_vis((x, y))
+        new_right_image, _ = model_manager.get_heatmap_vis((x, y))
 
         # Empty the right image container
         global right_image_container

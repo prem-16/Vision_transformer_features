@@ -1,5 +1,5 @@
 from src.models.model_wrapper_list import MODEL_DICT
-
+import numpy as np
 
 class ModelGUIManager:
     """
@@ -14,6 +14,8 @@ class ModelGUIManager:
         self._dirty = True
         self._image_dir_1 = None
         self._image_dir_2 = None
+        self._image_data_1 = None
+        self._image_data_2 = None
 
     @property
     def model_name(self):
@@ -45,6 +47,36 @@ class ModelGUIManager:
 
     def _set_dirty(self):
         self._dirty = True
+
+    def _transform_points(self, image1_points):
+        """
+        Transform the points from image 1 to image 2.
+        :param image1_data: The data of image 1.
+        :param image2_data: The data of image 2.
+        :param image1_points: The points in image 1.
+        :return: The points in image 2.
+        """
+
+        # # Transform the points
+        depth = float(self._image_data_1['depth'][image1_points[1]][image1_points[0]])
+        image1_points_h = np.array([image1_points[0] * depth, image1_points[1] * depth, depth])
+        image1_points_camera = np.matmul(np.linalg.inv(self._image_data_1['intrinsic']), image1_points_h)
+        image1_points_camera_h = np.append(image1_points_camera, 1)
+        image1_points_world_h = np.matmul(np.linalg.inv(self._image_data_1['extrinsic']), image1_points_camera_h)
+
+        image2_points_camera_h = np.matmul(self._image_data_2['extrinsic'], image1_points_world_h)
+        image2_points_camera = image2_points_camera_h[:3] / image2_points_camera_h[3]
+        image2_points_h = np.matmul(self._image_data_2['intrinsic'], image2_points_camera)
+        image2_points = image2_points_h[:2] / image2_points_h[2]
+
+        return image2_points
+
+    def create_ground_truth_map(self, image1_points):
+        image2_points = self._transform_points(image1_points)
+        gt_map = np.zeros(self._image_data_2['image_rgb'].shape[:2])
+
+        gt_map[int(image2_points[1])][int(image2_points[0])] = 1
+        return gt_map
 
     def update_model(self, model_name):
         assert model_name in MODEL_DICT, f"Model {model_name} not found!"
@@ -78,6 +110,6 @@ class ModelGUIManager:
         """
         if self._dirty:
             self.process_images()
-
-        return self._selected_model.get_heatmap_vis(self._image_dir_2, point)
+        vis, heatmap = self._selected_model.get_heatmap_vis(self._image_dir_2, point)
+        return vis, heatmap
 

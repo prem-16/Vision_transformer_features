@@ -134,6 +134,7 @@ def main():
         #model_ids="002_master_chef_can", # Only for PickYCB
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
+        render_camera_cfgs=dict(width=640, height=480),
         #camera_cfgs={"add_segmentation": True}, 
         #shader_dir="rt", # only if PC supports ray tracing
         #render_config={"rt_samples_per_pixel": 2, "rt_use_denoiser": False}, # only if PC supports ray tracing
@@ -145,6 +146,8 @@ def main():
     env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if you want to use default background) 
         "PickYCBInReplicaCAD-v0", 
         obs_mode=args.obs_mode,
+        render_camera_cfgs=dict(width=640, height=480),
+        camera_cfgs=dict(hand_camera=dict(width=640, height=480)),
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
         **args.env_kwargs)
@@ -350,7 +353,7 @@ def main():
             samples['extrinsic'].append(obs['camera_param']['hand_camera']['extrinsic_cv'])
             samples['image_rgb'].append(img_array)
             samples['depth'].append(obs['image']['hand_camera']['depth'])
-            samples['name'].append("test_"+str(counter))
+            samples['name'].append(f"test_{counter:02}.png")
             print("image data recorded", samples['name'][-1])
         if key == "s":
             store_data(samples, "./test_data")
