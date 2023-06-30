@@ -53,23 +53,16 @@ class DIFTWrapper(ModelWrapperBase):
         super().__init__()
         self._cache = {}
 
-    @staticmethod
-    def _compute_descriptors(image_dir, **kwargs):
-        """
-        Computes the descriptors for the image.
-        :param image_dir: The directory of the image.
-        :param kwargs: A dictionary of settings for the model.
-        :return: descriptors and dictionary of other information.
-        """
+    @classmethod
+    def _compute_descriptors(cls, image: Image.Image, **kwargs):
         with torch.no_grad():
             if kwargs.get('model', None) is None:
                 dift = SDFeaturizer(kwargs['model_type'])
             else:
                 dift = kwargs['model']
-            img = Image.open(image_dir).convert('RGB')
             if kwargs['img_size'] > 0:
-                img = img.resize([kwargs['img_size'], kwargs['img_size']])
-            img_tensor = (PILToTensor()(img) / 255.0 - 0.5) * 2
+                image = image.resize([kwargs['img_size'], kwargs['img_size']])
+            img_tensor = (PILToTensor()(image) / 255.0 - 0.5) * 2
             descriptors = dift.forward(
                 img_tensor,
                 prompt=kwargs.get('prompt', ""),
@@ -77,7 +70,10 @@ class DIFTWrapper(ModelWrapperBase):
                 up_ft_index=kwargs['up_ft_index'],
                 ensemble_size=kwargs['ensemble_size']
             )
-            return descriptors, {}
+            return descriptors, {
+                "num_patches": (descriptors.shape[-2], descriptors.shape[-1]),
+                "load_size": (image.size[1], image.size[0])
+            }
 
     def _get_descriptor_similarity(self, image_dir_1, image_dir_2, settings=None):
         """
@@ -93,12 +89,12 @@ class DIFTWrapper(ModelWrapperBase):
             dift = SDFeaturizer(settings['model_type'])
 
             # Compute the descriptors
-            descriptors_1, other_info_1 = self._compute_descriptors(image_dir_1, model=dift, **settings)
-            descriptors_2, other_info_2 = self._compute_descriptors(image_dir_2, model=dift, **settings)
+            descriptors_1, other_info_1 = self._compute_descriptors_from_dir(image_dir_1, model=dift, **settings)
+            descriptors_2, other_info_2 = self._compute_descriptors_from_dir(image_dir_2, model=dift, **settings)
 
             # Get the grid dim of patches
-            num_patches_1 = (descriptors_1.shape[-2], descriptors_1.shape[-1])
-            num_patches_2 = (descriptors_2.shape[-2], descriptors_2.shape[-1])
+            num_patches_1 = other_info_1['num_patches']
+            num_patches_2 = other_info_2['num_patches']
 
             # To prepare the descriptors we must reshape them such that we have all patches on the same axis
             # e.g. (1, 1280, 48, 48) -> (1, 1, 1280, 2304)

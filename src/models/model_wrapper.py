@@ -20,15 +20,37 @@ class ModelWrapperBase(ABC):
     def _compute_similarity(descriptors_1, descriptors_2):
         return chunk_cosine_sim(descriptors_1, descriptors_2)
 
-    @staticmethod
-    def _compute_descriptors(image_dir, **kwargs):
+    @classmethod
+    def _compute_descriptors(cls, image: Image.Image, **kwargs):
+        """
+        Computes the descriptors for the image.
+        :param image: The image.
+        :param kwargs: A dictionary of settings for the model.
+        :return: descriptors and dictionary of other information.
+        """
+        raise NotImplementedError("Not implemented!")
+
+    @classmethod
+    def _compute_descriptors_from_numpy(cls, image: np.ndarray, **kwargs):
+        """
+        Computes the descriptors for the image.
+        :param image: The image.
+        :param kwargs: A dictionary of settings for the model.
+        :return: descriptors and dictionary of other information.
+        """
+        image = Image.fromarray(image)
+        return cls._compute_descriptors(image, **kwargs)
+
+    @classmethod
+    def _compute_descriptors_from_dir(cls, image_dir, **kwargs):
         """
         Computes the descriptors for the image.
         :param image_dir: The directory of the image.
         :param kwargs: A dictionary of settings for the model.
         :return: descriptors and dictionary of other information.
         """
-        raise NotImplementedError("Not implemented!")
+        image = Image.open(image_dir).convert("RGB")
+        return cls._compute_descriptors(image, **kwargs)
 
     @staticmethod
     def _get_descriptor_index_from_point(point, num_patches):

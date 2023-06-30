@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from PIL import Image
 
 from src.models.dino_vit.correspondences import chunk_cosine_sim
 from src.models.dino_vit.extractor import ViTExtractor
@@ -60,8 +61,8 @@ class DinoVITWrapper(ModelWrapperBase):
         super().__init__()
         self._cache = {}
 
-    @staticmethod
-    def _compute_descriptors(image_dir, **kwargs):
+    @classmethod
+    def _compute_descriptors(cls, image_pil: Image.Image, **kwargs):
         """
         Computes the descriptors for the image.
         :param image_dir: The directory of the image.
@@ -75,7 +76,7 @@ class DinoVITWrapper(ModelWrapperBase):
                 extractor = ViTExtractor(kwargs['model_type'], kwargs['stride'], device=device)
             else:
                 extractor = kwargs['model']
-            image_batch, image_pil = extractor.preprocess(image_dir, kwargs['load_size'])
+            image_batch, image_pil = extractor.preprocess_from_pil(image_pil, kwargs['load_size'])
             descriptors = extractor.extract_descriptors(
                 image_batch.to(device), kwargs['layer'], kwargs['facet'], bin=kwargs['log_bin']
             )
@@ -83,9 +84,7 @@ class DinoVITWrapper(ModelWrapperBase):
 
         return descriptors, {
             "num_patches": num_patches,
-            "load_size": load_size,
-            "image_batch": image_batch,
-            "image_pil": image_pil
+            "load_size": load_size
         }
 
     def _get_descriptor_similarity(self, image_dir_1, image_dir_2, settings=None):
@@ -105,8 +104,8 @@ class DinoVITWrapper(ModelWrapperBase):
             extractor = ViTExtractor(settings['model_type'], settings['stride'], device=device)
 
             # Compute the descriptors
-            descriptors_1, other_info_1 = self._compute_descriptors(image_dir_1, model=extractor, **settings)
-            descriptors_2, other_info_2 = self._compute_descriptors(image_dir_2, model=extractor, **settings)
+            descriptors_1, other_info_1 = self._compute_descriptors_from_dir(image_dir_1, model=extractor, **settings)
+            descriptors_2, other_info_2 = self._compute_descriptors_from_dir(image_dir_2, model=extractor, **settings)
 
             # # extracting saliency maps for each image
             # saliency_map_1 = extractor.extract_saliency_maps(other_info_1['image_batch'].to(device))[0]
