@@ -113,3 +113,12 @@ class ModelWrapperBase(ABC):
         image_2 = Image.blend(image_2, heatmap, 0.5)
         return image_2 , heatmap
 
+    def compute_descriptors_from_pkl_sequence(self, sequence_pkl_dir):
+        """
+        Compute descriptors from a sequence pkl file.
+        :param sequence_pkl_dir: The directory of the sequence pkl file.
+        :return: Descriptors
+        """
+        # TODO use _compute_descriptors
+        pass
+
