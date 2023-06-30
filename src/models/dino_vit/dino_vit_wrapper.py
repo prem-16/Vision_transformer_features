@@ -40,6 +40,12 @@ class DinoVITWrapper(ModelWrapperBase):
             "default": 0.05,
             "step": 0.01
         },
+        "log_bin": {
+            "type": "slider",
+            "min": 0,
+            "max": 1,
+            "default": 1
+        },
         "model_type": {
             "type": "dropdown",
             "options": [
@@ -70,7 +76,9 @@ class DinoVITWrapper(ModelWrapperBase):
             else:
                 extractor = kwargs['model']
             image_batch, image_pil = extractor.preprocess(image_dir, kwargs['load_size'])
-            descriptors = extractor.extract_descriptors(image_batch.to(device), kwargs['layer'], kwargs['facet'], True)
+            descriptors = extractor.extract_descriptors(
+                image_batch.to(device), kwargs['layer'], kwargs['facet'], bin=kwargs['log_bin']
+            )
             num_patches, load_size = extractor.num_patches, extractor.load_size
 
         return descriptors, {
