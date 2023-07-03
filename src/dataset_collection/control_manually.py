@@ -85,13 +85,13 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         #offset = np.array([-1.9, 2, 0.9]) # another shelf (awkward angle, need to rotate camera) 
         #offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
         #offset = np.array([2.3, 1.4, 0.5]) # stairs
-        offset = np.array([-1.5, -1, 0.3]) # carpet
+        #offset = np.array([-1.5, -1, 0.3]) # carpet
         #offset = np.array([3.8, -0.8, 0.8]) # blue shelf
         #offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera) 
         #offset = np.array([1.3, 3.7, 0.5]) # dark room
         #offset = np.array([4.2, 0.5, 0.8]) # bicycle
         #offset = np.array([4.1, -5.3, 0.9]) # corner of a sofa 
-        #offset = np.array([2.5, -5, 0.9]) # carpet 
+        offset = np.array([2.5, -5, 0.9]) # carpet 
         self.arena.set_pose(sapien.Pose(-offset))
 
     def initialize_episode(self):
@@ -356,7 +356,7 @@ def main():
             samples['name'].append(f"test_{counter:02}.png")
             print("image data recorded", samples['name'][-1])
         if key == "s":
-            store_data(samples, "./test_data")
+            store_data(samples, "./test_data_2")
             print("data stored")
         print(obs['camera_param']['hand_camera']['intrinsic_cv'])
         print("reward", reward)
