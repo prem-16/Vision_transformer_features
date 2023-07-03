@@ -251,9 +251,12 @@ def register_all_ade20k(root):
 if __name__.endswith(".builtin"):
     # Assume pre-defined datasets live in `./datasets`.
     _root = os.path.expanduser(os.getenv("DETECTRON2_DATASETS", "datasets"))
-    register_all_coco(_root)
-    register_all_lvis(_root)
-    register_all_cityscapes(_root)
-    register_all_cityscapes_panoptic(_root)
-    register_all_pascal_voc(_root)
-    register_all_ade20k(_root)
+    try:
+        register_all_coco(_root)
+        register_all_lvis(_root)
+        register_all_cityscapes(_root)
+        register_all_cityscapes_panoptic(_root)
+        register_all_pascal_voc(_root)
+        register_all_ade20k(_root)
+    except:
+        pass
