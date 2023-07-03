@@ -5,7 +5,7 @@ import torch
 torch_ver = [int(x) for x in torch.__version__.split(".")[:2]]
 assert torch_ver >= [1, 8], "Requires PyTorch >= 1.8"
 
-print(f"######################{os.getcwd()}")
+print(f"{os.getcwd()}")
 # "loguru>=0.5.3",
 # "faiss-cpu>=1.7.1",
 # "matplotlib>=3.4.2",

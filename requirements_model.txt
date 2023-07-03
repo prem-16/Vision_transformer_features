@@ -53,5 +53,5 @@ open-clip-torch==2.0.2
 stable-diffusion-sdkit==2.1.3
 -e src/models/sd_dino/sd_dino/third_party/ODISE
 # Install sd_dino from src.models.sd_dino.sd_dino here
--e src/models/sd_dino/sd_dino
+-e src/models/sd_dino/
 -e src/models/sd_dino/sd_dino/third_party/detectron2
