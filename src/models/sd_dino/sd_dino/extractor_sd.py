@@ -16,46 +16,47 @@ from detectron2.utils.env import seed_all_rng
 from detectron2.utils.visualizer import ColorMode, Visualizer, random_color
 from detectron2.utils.logger import setup_logger
 
-from third_party.ODISE.odise import model_zoo
-from third_party.ODISE.odise.checkpoint import ODISECheckpointer
-from third_party.ODISE.odise.config import instantiate_odise
-from third_party.ODISE.odise.data import get_openseg_labels
-from third_party.ODISE.odise.modeling.wrapper import OpenPanopticInference
+from mask2former.data.datasets.register_ade20k_panoptic import ADE20K_150_CATEGORIES
+from odise import model_zoo
+from odise.checkpoint import ODISECheckpointer
+from odise.config import instantiate_odise
+from odise.data import get_openseg_labels
+from odise.modeling.wrapper import OpenPanopticInference
 
-from utils.utils_correspondence import resize
+from .utils.utils_correspondence import resize
 import faiss
 
-# COCO_THING_CLASSES = [
-#     label
-#     for idx, label in enumerate(get_openseg_labels("coco_panoptic", True))
-#     if COCO_CATEGORIES[idx]["isthing"] == 1
-# ]
-# COCO_THING_COLORS = [c["color"] for c in COCO_CATEGORIES if c["isthing"] == 1]
-# COCO_STUFF_CLASSES = [
-#     label
-#     for idx, label in enumerate(get_openseg_labels("coco_panoptic", True))
-#     if COCO_CATEGORIES[idx]["isthing"] == 0
-# ]
-# COCO_STUFF_COLORS = [c["color"] for c in COCO_CATEGORIES if c["isthing"] == 0]
-#
-# ADE_THING_CLASSES = [
-#     label
-#     for idx, label in enumerate(get_openseg_labels("ade20k_150", True))
-#     if ADE20K_150_CATEGORIES[idx]["isthing"] == 1
-# ]
-# ADE_THING_COLORS = [c["color"] for c in ADE20K_150_CATEGORIES if c["isthing"] == 1]
-# ADE_STUFF_CLASSES = [
-#     label
-#     for idx, label in enumerate(get_openseg_labels("ade20k_150", True))
-#     if ADE20K_150_CATEGORIES[idx]["isthing"] == 0
-# ]
-# ADE_STUFF_COLORS = [c["color"] for c in ADE20K_150_CATEGORIES if c["isthing"] == 0]
-#
-# LVIS_CLASSES = get_openseg_labels("lvis_1203", True)
-# # use beautiful coco colors
-# LVIS_COLORS = list(
-#     itertools.islice(itertools.cycle([c["color"] for c in COCO_CATEGORIES]), len(LVIS_CLASSES))
-# )
+COCO_THING_CLASSES = [
+    label
+    for idx, label in enumerate(get_openseg_labels("coco_panoptic", True))
+    if COCO_CATEGORIES[idx]["isthing"] == 1
+]
+COCO_THING_COLORS = [c["color"] for c in COCO_CATEGORIES if c["isthing"] == 1]
+COCO_STUFF_CLASSES = [
+    label
+    for idx, label in enumerate(get_openseg_labels("coco_panoptic", True))
+    if COCO_CATEGORIES[idx]["isthing"] == 0
+]
+COCO_STUFF_COLORS = [c["color"] for c in COCO_CATEGORIES if c["isthing"] == 0]
+
+ADE_THING_CLASSES = [
+    label
+    for idx, label in enumerate(get_openseg_labels("ade20k_150", True))
+    if ADE20K_150_CATEGORIES[idx]["isthing"] == 1
+]
+ADE_THING_COLORS = [c["color"] for c in ADE20K_150_CATEGORIES if c["isthing"] == 1]
+ADE_STUFF_CLASSES = [
+    label
+    for idx, label in enumerate(get_openseg_labels("ade20k_150", True))
+    if ADE20K_150_CATEGORIES[idx]["isthing"] == 0
+]
+ADE_STUFF_COLORS = [c["color"] for c in ADE20K_150_CATEGORIES if c["isthing"] == 0]
+
+LVIS_CLASSES = get_openseg_labels("lvis_1203", True)
+# use beautiful coco colors
+LVIS_COLORS = list(
+    itertools.islice(itertools.cycle([c["color"] for c in COCO_CATEGORIES]), len(LVIS_CLASSES))
+)
 
 
 class StableDiffusionSeg(object):
