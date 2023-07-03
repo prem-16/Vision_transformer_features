@@ -45,7 +45,7 @@ class DinoVITWrapper(ModelWrapperBase):
             "type": "slider",
             "min": 0,
             "max": 1,
-            "default": 1
+            "default": 0
         },
         "model_type": {
             "type": "dropdown",

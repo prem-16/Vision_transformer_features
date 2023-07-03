@@ -1,8 +1,9 @@
 # setuptools==65.5.0
-gym==0.21.0
+# gym==0.21.0
 numpy==1.23.5
 tensorboard
 matplotlib==3.7.1
+# mani_skill2
 pillow==9.5.0
 tqdm==4.65.0
 scikit-learn==1.2.0
