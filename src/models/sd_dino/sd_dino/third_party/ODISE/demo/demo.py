@@ -44,10 +44,10 @@ from detectron2.utils.visualizer import ColorMode, Visualizer, random_color
 from mask2former.data.datasets.register_ade20k_panoptic import ADE20K_150_CATEGORIES
 from torch import nn
 
-from ..odise.checkpoint import ODISECheckpointer
-from ..odise.config import instantiate_odise
-from ..odise.data import get_openseg_labels
-from ..odise.engine.defaults import get_model_from_module
+from odise.checkpoint import ODISECheckpointer
+from odise.config import instantiate_odise
+from odise.data import get_openseg_labels
+from odise.engine.defaults import get_model_from_module
 
 nltk.download("popular", quiet=True)
 nltk.download("universal_tagset", quiet=True)

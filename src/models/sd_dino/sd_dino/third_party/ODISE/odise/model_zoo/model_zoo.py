@@ -21,8 +21,9 @@ import pkg_resources
 import torch
 from detectron2.config import LazyConfig
 
-from ..checkpoint import ODISECheckpointer
-from ..config import instantiate_odise
+from odise.checkpoint import ODISECheckpointer
+from odise.config import instantiate_odise
+
 
 class _ModelZooUrls(object):
     """

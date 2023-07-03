@@ -83,7 +83,7 @@ setup(
     packages=find_packages(exclude=("configs", "tests*")),
     python_requires=">=3.6",
     install_requires=[
-        # "detectron2 @ https://github.com/facebookresearch/detectron2/archive/v0.6.zip",
+        "detectron2 @ https://github.com/facebookresearch/detectron2/archive/v0.6.zip",
         # "scipy>=1.7.3",
         # "boto3>=1.21.25",
         # "hydra-core==1.1.1",

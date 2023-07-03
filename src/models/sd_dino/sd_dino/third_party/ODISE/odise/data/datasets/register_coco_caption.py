@@ -53,19 +53,15 @@ def register_all_coco_panoptic_annos_sem_seg_caption(root):
         instances_meta = MetadataCatalog.get(prefix_instances)
         image_root, instances_json = instances_meta.image_root, instances_meta.json_file
 
-        try:
-            register_coco_panoptic_annos_sem_seg(
-                prefix,
-                get_metadata(),
-                image_root,
-                os.path.join(root, panoptic_root),
-                os.path.join(root, panoptic_json),
-                os.path.join(root, semantic_root),
-                instances_json,
-            )
-        except:
-            pass
+        register_coco_panoptic_annos_sem_seg(
+            prefix,
+            get_metadata(),
+            image_root,
+            os.path.join(root, panoptic_root),
+            os.path.join(root, panoptic_json),
+            os.path.join(root, semantic_root),
+            instances_json,
+        )
 
 
-print("CALLED register_all_coco_panoptic_annos_sem_seg_caption DETECTRON2_DATASETS")
 register_all_coco_panoptic_annos_sem_seg_caption(os.getenv("DETECTRON2_DATASETS", "datasets"))

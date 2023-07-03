@@ -8,6 +8,6 @@
 # Written by Jiarui Xu
 # ------------------------------------------------------------------------------
 
-from ..checkpoint.odise_checkpointer import ODISECheckpointer
+from .odise_checkpointer import ODISECheckpointer
 
 __all__ = ["ODISECheckpointer"]

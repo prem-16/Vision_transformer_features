@@ -61,8 +61,7 @@ def get_model_zoo_configs() -> List[str]:
     )
     return config_paths
 
-print(f"##################### testtt #####################")
-print(f"##################### {get_model_zoo_configs()} #####################")
+
 setup(
     name="odise",
     version=get_version(),
@@ -88,14 +87,14 @@ setup(
     ],
     extras_require={
         # dev dependencies. Install them by `pip install 'odise[dev]'`
-        "dev": [
-            "flake8==3.8.1",
-            "isort==4.3.21",
-            "flake8-bugbear",
-            "flake8-comprehensions",
-            "click==8.0.4",
-            "importlib-metadata==4.11.3",
-        ],
+        # "dev": [
+        #     "flake8==3.8.1",
+        #     "isort==4.3.21",
+        #     "flake8-bugbear",
+        #     "flake8-comprehensions",
+        #     "click==8.0.4",
+        #     "importlib-metadata==4.11.3",
+        # ],
     },
     include_package_data=True,
 )

@@ -586,23 +586,20 @@ def register_all_ctx59(root):
         image_dir = os.path.join(root, "images", dirname)
         gt_dir = os.path.join(root, "annotations_ctx59", dirname)
         name = f"ctx59_sem_seg_{name}"
-        try:
-            DatasetCatalog.register(
-                name, lambda x=image_dir, y=gt_dir: load_sem_seg(y, x, gt_ext="png", image_ext="jpg")
-            )
-            MetadataCatalog.get(name).set(
-                stuff_classes=meta["stuff_classes"][:],
-                thing_dataset_id_to_contiguous_id={},  # to make Mask2Former happy
-                stuff_dataset_id_to_contiguous_id=meta["stuff_dataset_id_to_contiguous_id"],
-                image_root=image_dir,
-                sem_seg_root=gt_dir,
-                evaluator_type="sem_seg",
-                ignore_label=255,
-            )
-        except:
-            pass
+        DatasetCatalog.register(
+            name, lambda x=image_dir, y=gt_dir: load_sem_seg(y, x, gt_ext="png", image_ext="jpg")
+        )
+        MetadataCatalog.get(name).set(
+            stuff_classes=meta["stuff_classes"][:],
+            thing_dataset_id_to_contiguous_id={},  # to make Mask2Former happy
+            stuff_dataset_id_to_contiguous_id=meta["stuff_dataset_id_to_contiguous_id"],
+            image_root=image_dir,
+            sem_seg_root=gt_dir,
+            evaluator_type="sem_seg",
+            ignore_label=255,
+        )
 
-print("CALLED register_all_ctx59 DETECTRON2_DATASETS")
+
 register_all_ctx59(os.getenv("DETECTRON2_DATASETS", "datasets"))
 
 
@@ -631,23 +628,20 @@ def register_all_pascal21(root):
         image_dir = os.path.join(root, "images", dirname)
         gt_dir = os.path.join(root, "annotations_pascal21", dirname)
         name = f"pascal21_sem_seg_{name}"
-        try:
-            DatasetCatalog.register(
-                name, lambda x=image_dir, y=gt_dir: load_sem_seg(y, x, gt_ext="png", image_ext="jpg")
-            )
-            MetadataCatalog.get(name).set(
-                stuff_classes=meta["stuff_classes"][:],
-                thing_dataset_id_to_contiguous_id={},  # to make Mask2Former happy
-                stuff_dataset_id_to_contiguous_id=meta["stuff_dataset_id_to_contiguous_id"],
-                image_root=image_dir,
-                sem_seg_root=gt_dir,
-                evaluator_type="sem_seg",
-                ignore_label=255,
-            )
-        except:
-            pass
+        DatasetCatalog.register(
+            name, lambda x=image_dir, y=gt_dir: load_sem_seg(y, x, gt_ext="png", image_ext="jpg")
+        )
+        MetadataCatalog.get(name).set(
+            stuff_classes=meta["stuff_classes"][:],
+            thing_dataset_id_to_contiguous_id={},  # to make Mask2Former happy
+            stuff_dataset_id_to_contiguous_id=meta["stuff_dataset_id_to_contiguous_id"],
+            image_root=image_dir,
+            sem_seg_root=gt_dir,
+            evaluator_type="sem_seg",
+            ignore_label=255,
+        )
 
-print("CALLED register_all_pascal21 DETECTRON2_DATASETS")
+
 register_all_pascal21(os.getenv("DETECTRON2_DATASETS", "datasets"))
 
 
@@ -676,22 +670,18 @@ def register_all_ctx459(root):
         image_dir = os.path.join(root, "images", dirname)
         gt_dir = os.path.join(root, "annotations_ctx459", dirname)
         name = f"ctx459_sem_seg_{name}"
-        try:
-            DatasetCatalog.register(
-                name, lambda x=image_dir, y=gt_dir: load_sem_seg(y, x, gt_ext="tif", image_ext="jpg")
-            )
-            MetadataCatalog.get(name).set(
-                stuff_classes=meta["stuff_classes"][:],
-                thing_dataset_id_to_contiguous_id={},  # to make Mask2Former happy
-                stuff_dataset_id_to_contiguous_id=meta["stuff_dataset_id_to_contiguous_id"],
-                image_root=image_dir,
-                sem_seg_root=gt_dir,
-                evaluator_type="sem_seg",
-                ignore_label=65535,  # NOTE: gt is saved in 16-bit TIFF images
-            )
-        except:
-            pass
+        DatasetCatalog.register(
+            name, lambda x=image_dir, y=gt_dir: load_sem_seg(y, x, gt_ext="tif", image_ext="jpg")
+        )
+        MetadataCatalog.get(name).set(
+            stuff_classes=meta["stuff_classes"][:],
+            thing_dataset_id_to_contiguous_id={},  # to make Mask2Former happy
+            stuff_dataset_id_to_contiguous_id=meta["stuff_dataset_id_to_contiguous_id"],
+            image_root=image_dir,
+            sem_seg_root=gt_dir,
+            evaluator_type="sem_seg",
+            ignore_label=65535,  # NOTE: gt is saved in 16-bit TIFF images
+        )
 
 
-print("CALLED register_all_ctx459 DETECTRON2_DATASETS")
 register_all_ctx459(os.getenv("DETECTRON2_DATASETS", "datasets"))
