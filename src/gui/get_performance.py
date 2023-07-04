@@ -54,8 +54,10 @@ for i, image_dir in enumerate(image_dirs[1:]):
     ground_truth_map = model_manager.create_ground_truth_map((r[0], r[1]))
     ground_truth_point = model_manager._transform_points((r[0], r[1]))
     plt.imshow(blend_image)
-    plt.scatter(pred_index[0], pred_index[1], c='b', marker='x')
-    plt.scatter(ground_truth_point[0],ground_truth_point[1], c='r', marker='x')
+    plt.scatter(pred_index[0], pred_index[1], c='b', marker='x',label="VIT prediction")
+    plt.title("Image Correspondance using DinoViTS8")
+    plt.scatter(ground_truth_point[0],ground_truth_point[1], c='r', marker='x',label="ground truth")
+    plt.legend()
     plt.show()
     model_manager._dirty = False
     error = get_error(ground_truth_point, pred_index)
