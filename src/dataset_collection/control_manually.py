@@ -58,7 +58,7 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         # Load YCB objects 
         # It is the same as in PickSingleYCB-v0, just for illustration here
         builder = self._scene.create_actor_builder()
-        model_dir = ASSET_DIR / "mani_skill2_ycb/models/011_banana" # change object here
+        model_dir = ASSET_DIR / "mani_skill2_ycb/models/013_apple" # change object here
         scale = self.cube_half_size / 0.01887479572529618
         collision_file = str(model_dir / "collision.obj")
         builder.add_multiple_collisions_from_file(
@@ -85,13 +85,13 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         #offset = np.array([-1.9, 2, 0.9]) # another shelf (awkward angle, need to rotate camera) 
         #offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
         #offset = np.array([2.3, 1.4, 0.5]) # stairs
-        offset = np.array([-1.5, -1, 0.3]) # carpet
+        #offset = np.array([-1.5, -1, 0.3]) # carpet
         #offset = np.array([3.8, -0.8, 0.8]) # blue shelf
         #offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera) 
         #offset = np.array([1.3, 3.7, 0.5]) # dark room
         #offset = np.array([4.2, 0.5, 0.8]) # bicycle
         #offset = np.array([4.1, -5.3, 0.9]) # corner of a sofa 
-        #offset = np.array([2.5, -5, 0.9]) # carpet 
+        offset = np.array([2.5, -5, 0.9]) # carpet 
         self.arena.set_pose(sapien.Pose(-offset))
 
     def initialize_episode(self):
@@ -147,7 +147,7 @@ def main():
         "PickYCBInReplicaCAD-v0", 
         obs_mode=args.obs_mode,
         render_camera_cfgs=dict(width=640, height=480),
-        camera_cfgs=dict(hand_camera=dict(width=640, height=480)),
+        camera_cfgs=dict(hand_camera=dict(width=512, height=512)),
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
         **args.env_kwargs)
@@ -356,12 +356,13 @@ def main():
             samples['name'].append(f"test_{counter:02}.png")
             print("image data recorded", samples['name'][-1])
         if key == "s":
-            store_data(samples, "./test_data")
+            store_data(samples, "./test_data_2")
             print("data stored")
         print(obs['camera_param']['hand_camera']['intrinsic_cv'])
         print("reward", reward)
         print("done", done)
         print("info", info)
+        print("qpos", obs['agent']['qpos'])
         #print('ext', obs['camera_param']['hand_camera']['extrinsic_cv'])
         #print('obs extra', obs['extra'])
         print('obs', obs['agent'])

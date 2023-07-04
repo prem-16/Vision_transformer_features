@@ -41,6 +41,7 @@ def read_data(datasets_dir="./test_data"):
         "extrinsic": data['extrinsic'],
         "intrinsic": data['intrinsic'],
         "depth": data['depth'],
+
     }
     return data
 
