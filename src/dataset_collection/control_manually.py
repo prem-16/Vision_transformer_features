@@ -58,7 +58,7 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         # Load YCB objects 
         # It is the same as in PickSingleYCB-v0, just for illustration here
         builder = self._scene.create_actor_builder()
-        model_dir = ASSET_DIR / "mani_skill2_ycb/models/011_banana" # change object here
+        model_dir = ASSET_DIR / "mani_skill2_ycb/models/013_apple" # change object here
         scale = self.cube_half_size / 0.01887479572529618
         collision_file = str(model_dir / "collision.obj")
         builder.add_multiple_collisions_from_file(
@@ -147,7 +147,7 @@ def main():
         "PickYCBInReplicaCAD-v0", 
         obs_mode=args.obs_mode,
         render_camera_cfgs=dict(width=640, height=480),
-        camera_cfgs=dict(hand_camera=dict(width=640, height=480)),
+        camera_cfgs=dict(hand_camera=dict(width=512, height=512)),
         reward_mode=args.reward_mode,
         control_mode=args.control_mode,
         **args.env_kwargs)
@@ -362,6 +362,7 @@ def main():
         print("reward", reward)
         print("done", done)
         print("info", info)
+        print("qpos", obs['agent']['qpos'])
         #print('ext', obs['camera_param']['hand_camera']['extrinsic_cv'])
         #print('obs extra', obs['extra'])
         print('obs', obs['agent'])
