@@ -18,6 +18,24 @@ from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
 
 
+# MASK = True
+# VER = "v1-5"
+# PCA = False
+# CO_PCA = True
+# PCA_DIMS = [256, 256, 256]
+# SIZE =960
+# EDGE_PAD = False
+#
+# FUSE_DINO = 1
+# ONLY_DINO = 0
+# DINOV2 = True
+# MODEL_SIZE = 'base'
+# DRAW_DENSE = 1
+# DRAW_SWAP = 1
+# TEXT_INPUT = False
+# SEED = 42
+# TIMESTEP = 100
+
 MASK = True
 VER = "v1-5"
 PCA = False
@@ -27,14 +45,16 @@ SIZE =960
 EDGE_PAD = False
 
 FUSE_DINO = 1
-ONLY_DINO = 0
-DINOV2 = True
+ONLY_DINO = 1
+DINOV2 = False
 MODEL_SIZE = 'base'
 DRAW_DENSE = 1
 DRAW_SWAP = 1
 TEXT_INPUT = False
 SEED = 42
 TIMESTEP = 100
+
+
 
 DIST = 'l2' if FUSE_DINO and not ONLY_DINO else 'cos'
 if ONLY_DINO:
@@ -46,7 +66,9 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.benchmark = True
 
-model, aug = load_model(diffusion_ver=VER, image_size=SIZE, num_timesteps=TIMESTEP)
+with torch.no_grad():
+    # model, aug = load_model(diffusion_ver=VER, image_size=SIZE, num_timesteps=TIMESTEP)
+    model, aug = None, None
 
 
 def compute_pair_feature(model, aug, save_path, files, category, mask=False, dist='cos', real_size=960):
@@ -451,13 +473,22 @@ def process_images(src_img_path,trg_img_path):
 
     return result
 
-src_img_path = "data/images/dog_00.jpg"
-trg_img_path = "data/images/dog_59.jpg"
+
+# Open an image from the  "images/test_images" folder:
+image = Image.open("images/test_images/test_01.png")
+
+
+# Open PIL Image from ../images/test_images/test_01.png
+pil_image = Image.open("images/test_images/test_01.png")
+
+
+src_img_path = "images/test_images/test_01.png"
+trg_img_path = "images/test_images/test_01_modified.png"
 result = process_images(src_img_path, trg_img_path)
 
 
-src_img_path = "data/images/dog_Anno_00.png"
-trg_img_path = "data/images/dog_Anno_59.png"
-result = process_images(src_img_path, trg_img_path)
+# src_img_path = "data/images/dog_Anno_00.png"
+# trg_img_path = "data/images/dog_Anno_59.png"
+# result = process_images(src_img_path, trg_img_path)
 
 pass

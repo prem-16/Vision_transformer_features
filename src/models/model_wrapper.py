@@ -21,6 +21,39 @@ class ModelWrapperBase(ABC):
         return chunk_cosine_sim(descriptors_1, descriptors_2)
 
     @classmethod
+    def from_pkl(cls, desc_pkl_path_1, desc_pkl_path_2):
+        """
+        Build class and create cache from pkl.
+
+        :param desc_pkl_path_1:
+        :param desc_pkl_path_2:
+        :return:
+        """
+        # Load descriptors from pickle files
+        pkl_1 = torch.load(desc_pkl_path_1)
+        pkl_2 = torch.load(desc_pkl_path_2)
+
+        descriptors_1, other_info_1 = pkl_1
+        descriptors_2, other_info_2 = pkl_2
+
+        # Compute similarity
+        similarity = cls._compute_similarity(descriptors_1, descriptors_2)
+
+        # Build cache
+        cache = {
+            "descriptors_1": descriptors_1,
+            "descriptors_2": descriptors_2,
+            "similarity": similarity,
+            "num_patches_1": other_info_1['num_patches'],
+            "num_patches_2": other_info_2['num_patches']
+        }
+
+        instance = cls()
+        instance._cache = cache
+        return instance
+
+
+    @classmethod
     def _compute_descriptors(cls, image: Image.Image, **kwargs):
         """
         Computes the descriptors for the image.

@@ -70,8 +70,17 @@ class DIFTWrapper(ModelWrapperBase):
                 up_ft_index=kwargs['up_ft_index'],
                 ensemble_size=kwargs['ensemble_size']
             )
+
+            num_patches = (descriptors.shape[-2], descriptors.shape[-1])
+
+            # To prepare the descriptors we must reshape them such that we have all patches on the same axis
+            # e.g. (1, 1280, 48, 48) -> (1, 1, 1280, 2304)
+            descriptors = descriptors.reshape(1, 1, descriptors.shape[1], -1)
+            # Permute the descriptors such that we have e.g. (1, 1, 2304, 1280)
+            descriptors = descriptors.permute(0, 1, 3, 2)
+
             return descriptors, {
-                "num_patches": (descriptors.shape[-2], descriptors.shape[-1]),
+                "num_patches": num_patches,
                 "load_size": (image.size[1], image.size[0])
             }
 
@@ -95,14 +104,6 @@ class DIFTWrapper(ModelWrapperBase):
             # Get the grid dim of patches
             num_patches_1 = other_info_1['num_patches']
             num_patches_2 = other_info_2['num_patches']
-
-            # To prepare the descriptors we must reshape them such that we have all patches on the same axis
-            # e.g. (1, 1280, 48, 48) -> (1, 1, 1280, 2304)
-            descriptors_1 = descriptors_1.reshape(1, 1, descriptors_1.shape[1], -1)
-            descriptors_2 = descriptors_2.reshape(1, 1, descriptors_2.shape[1], -1)
-            # Permute the descriptors such that we have e.g. (1, 1, 2304, 1280)
-            descriptors_1 = descriptors_1.permute(0, 1, 3, 2)
-            descriptors_2 = descriptors_2.permute(0, 1, 3, 2)
 
             # calculate similarity between image1 and image2 descriptors
             similarities = self._compute_similarity(descriptors_1, descriptors_2)
