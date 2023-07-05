@@ -3,7 +3,9 @@ from abc import ABC
 import numpy as np
 import torch
 from PIL import Image
-
+import gzip
+import pickle
+import os
 from src.models.dino_vit.correspondences import chunk_cosine_sim
 
 
@@ -20,38 +22,39 @@ class ModelWrapperBase(ABC):
     def _compute_similarity(descriptors_1, descriptors_2):
         return chunk_cosine_sim(descriptors_1, descriptors_2)
 
-    @classmethod
-    def from_pkl(cls, desc_pkl_path_1, desc_pkl_path_2):
+    def build_cache_from_pkl_gzip(self, pkl_path, ref_index):
         """
-        Build class and create cache from pkl.
+        Build class and create cache from pkl gzip file.
 
         :param desc_pkl_path_1:
         :param desc_pkl_path_2:
         :return:
         """
-        # Load descriptors from pickle files
-        pkl_1 = torch.load(desc_pkl_path_1)
-        pkl_2 = torch.load(desc_pkl_path_2)
 
-        descriptors_1, other_info_1 = pkl_1
-        descriptors_2, other_info_2 = pkl_2
+        # Load descriptors from pickle files
+        #   Extract gzip
+        f = gzip.open(pkl_path, 'rb')
+        #   Load pkl
+        pkl = pickle.load(f)
+
+        # Get descriptor info from pickle
+        ref_desc, ref_other_info = pkl[0]
+        tgt_desc, tgt_other_info = pkl[ref_index]
 
         # Compute similarity
-        similarity = cls._compute_similarity(descriptors_1, descriptors_2)
+        similarity = self._compute_similarity(ref_desc, tgt_desc)
 
         # Build cache
         cache = {
-            "descriptors_1": descriptors_1,
-            "descriptors_2": descriptors_2,
-            "similarity": similarity,
-            "num_patches_1": other_info_1['num_patches'],
-            "num_patches_2": other_info_2['num_patches']
+            "descriptors_1": ref_desc,
+            "descriptors_2": tgt_desc,
+            "similarities": similarity,
+            "num_patches_1": ref_other_info['num_patches'],
+            "num_patches_2": tgt_other_info['num_patches']
         }
 
-        instance = cls()
-        instance._cache = cache
-        return instance
-
+        # Set cache
+        self._cache = cache
 
     @classmethod
     def _compute_descriptors(cls, image: Image.Image, **kwargs):
@@ -143,16 +146,9 @@ class ModelWrapperBase(ABC):
 
         return heatmap
 
-    def get_heatmap_vis(self, image_dir_2, point):
-        """
-        Similar to get_heatmap but returns the heatmap overlayed on the second image.
-        :return: The heatmap overlayed on the second image as a PIL image.
-        """
-        heatmap = self.get_heatmap(point)
-
-        # Resize the heatmap to the size of the right image
-        image_2 = Image.open(image_dir_2).convert("RGB")
-        heatmap = heatmap.copy()
+    def get_heatmap_vis_from_pil(self, image_2: Image.Image, point, heatmap=None):
+        if heatmap is None:
+            heatmap = self.get_heatmap(point)
 
         # Heatmap is numpy array
         # First convert (H, W) to (H, W, 3)
@@ -166,7 +162,23 @@ class ModelWrapperBase(ABC):
         heatmap = heatmap.resize(image_2.size)
         # Add the heatmap values to the image and cap the values at 255
         image_2 = Image.blend(image_2, heatmap, 0.5)
-        return image_2 , heatmap
+        return image_2, heatmap
+
+    def get_heatmap_vis_from_numpy(self, image_2: np.ndarray, point):
+        return self.get_heatmap_vis_from_pil(Image.fromarray(image_2), point)
+
+    def get_heatmap_vis(self, image_dir_2, point):
+        """
+        Similar to get_heatmap but returns the heatmap overlayed on the second image.
+        :return: The heatmap overlayed on the second image as a PIL image.
+        """
+        heatmap = self.get_heatmap(point)
+
+        # Resize the heatmap to the size of the right image
+        image_2 = Image.open(image_dir_2).convert("RGB")
+        heatmap = heatmap.copy()
+
+        return self.get_heatmap_vis_from_pil(image_2, point, heatmap=heatmap)
 
     def compute_descriptors_from_pkl_sequence(self, sequence_pkl_dir):
         """

@@ -69,6 +69,7 @@ class DinoVITWrapper(ModelWrapperBase):
         :param kwargs: A dictionary of settings for the model.
         :return: descriptors and dictionary of other information.
         """
+
         with torch.no_grad():
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
             print(device)

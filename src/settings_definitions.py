@@ -1,0 +1,4 @@
+
+DINO_SETTINGS_EXAMPLE = {
+
+}

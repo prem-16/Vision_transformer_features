@@ -3,6 +3,8 @@ import pickle
 import gzip
 from PIL import Image
 import shutil
+
+
 def get_image_list(image_directory):
     """
     Recursively get all image files in the directory and subdirectories.
@@ -24,12 +26,13 @@ def get_image_list(image_directory):
 
     return sorted(image_files), sorted(image_dirs)
 
-def read_data(datasets_dir="./test_data"):
+
+def read_data(datasets_dir="./test_data", dataset_name="data.pkl.gzip"):
     """
     This method reads the states from the data file(data.pkl.gzip).
     """
     print("... read data")
-    data_file = os.path.join(datasets_dir, 'data.pkl.gzip')
+    data_file = os.path.join(datasets_dir, dataset_name)
 
     f = gzip.open(data_file, 'rb')
     data = pickle.load(f)
