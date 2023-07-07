@@ -22,6 +22,33 @@ class ModelWrapperBase(ABC):
     def _compute_similarity(descriptors_1, descriptors_2):
         return chunk_cosine_sim(descriptors_1, descriptors_2)
 
+    @classmethod
+    def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2):
+        """
+        Build cache from the compute descriptor dump, this includes computing the similarities.
+        :param descriptor_dump_1:
+        :param descriptor_dump_2:
+        :return:
+        """
+
+        descriptors_1, other_info_1 = descriptor_dump_1
+        descriptors_2, other_info_2 = descriptor_dump_2
+
+        # Get the grid dim of patches
+        num_patches_1 = other_info_1['num_patches']
+        num_patches_2 = other_info_2['num_patches']
+
+        # calculate similarity between image1 and image2 descriptors
+        similarities = cls._compute_similarity(descriptors_1, descriptors_2)
+
+        return {
+            "descriptors_1": descriptors_1,
+            "descriptors_2": descriptors_2,
+            "similarities": similarities,
+            "num_patches_1": num_patches_1,
+            "num_patches_2": num_patches_2,
+        }
+
     def build_cache_from_pkl_gzip(self, pkl_path, ref_index):
         """
         Build class and create cache from pkl gzip file.
@@ -37,21 +64,8 @@ class ModelWrapperBase(ABC):
         #   Load pkl
         pkl = pickle.load(f)
 
-        # Get descriptor info from pickle
-        ref_desc, ref_other_info = pkl[0]
-        tgt_desc, tgt_other_info = pkl[ref_index]
-
-        # Compute similarity
-        similarity = self._compute_similarity(ref_desc, tgt_desc)
-
         # Build cache
-        cache = {
-            "descriptors_1": ref_desc,
-            "descriptors_2": tgt_desc,
-            "similarities": similarity,
-            "num_patches_1": ref_other_info['num_patches'],
-            "num_patches_2": tgt_other_info['num_patches']
-        }
+        cache = self._build_similarity_cache_from_descriptor_dump(pkl[0], pkl[ref_index])
 
         # Set cache
         self._cache = cache

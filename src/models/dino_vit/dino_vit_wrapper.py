@@ -42,10 +42,8 @@ class DinoVITWrapper(ModelWrapperBase):
             "step": 0.01
         },
         "log_bin": {
-            "type": "slider",
-            "min": 0,
-            "max": 1,
-            "default": 0
+            "type": "toggle",
+            "default": False
         },
         "model_type": {
             "type": "dropdown",
@@ -72,11 +70,12 @@ class DinoVITWrapper(ModelWrapperBase):
 
         with torch.no_grad():
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            print(device)
+
             if kwargs.get('model', None) is None:
                 extractor = ViTExtractor(kwargs['model_type'], kwargs['stride'], device=device)
             else:
                 extractor = kwargs['model']
+
             image_batch, image_pil = extractor.preprocess_from_pil(image_pil, kwargs['load_size'])
             descriptors = extractor.extract_descriptors(
                 image_batch.to(device), kwargs['layer'], kwargs['facet'], bin=kwargs['log_bin']
@@ -100,31 +99,17 @@ class DinoVITWrapper(ModelWrapperBase):
 
         # Important if you don't want your GPU to blow up
         with torch.no_grad():
-            # extracting descriptors for each image
+            # Extracting descriptors for each image
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
             extractor = ViTExtractor(settings['model_type'], settings['stride'], device=device)
 
             # Compute the descriptors
-            descriptors_1, other_info_1 = self._compute_descriptors_from_dir(image_dir_1, model=extractor, **settings)
-            descriptors_2, other_info_2 = self._compute_descriptors_from_dir(image_dir_2, model=extractor, **settings)
+            descriptor_dump_1 = self._compute_descriptors_from_dir(image_dir_1, model=extractor, **settings)
+            descriptor_dump_2 = self._compute_descriptors_from_dir(image_dir_2, model=extractor, **settings)
 
-            # # extracting saliency maps for each image
-            # saliency_map_1 = extractor.extract_saliency_maps(other_info_1['image_batch'].to(device))[0]
-            # saliency_map_2 = extractor.extract_saliency_maps(other_info_2['image_batch'].to(device))[0]
-            # # threshold saliency maps to get fg / bg masks
-            # fg_mask_1 = saliency_map_1 > settings['threshold']
-            # fg_mask_2 = saliency_map_2 > settings['threshold']
+            response = self._build_similarity_cache_from_descriptor_dump(descriptor_dump_1, descriptor_dump_2)
 
-            # calculate similarity between image1 and image2 descriptors
-            similarities = self._compute_similarity(descriptors_1, descriptors_2)
-
-        return {
-            "descriptors1": descriptors_1,
-            "descriptors2": descriptors_2,
-            "similarities": similarities,
-            "num_patches_1": other_info_1['num_patches'],
-            "num_patches_2": other_info_2['num_patches']
-        }
+        return response
 
     def process_image_pair(self, image_dir_1, image_dir_2, settings=None):
         """

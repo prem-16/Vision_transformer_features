@@ -48,8 +48,8 @@ FUSE_DINO = 1
 ONLY_DINO = 1
 DINOV2 = False
 MODEL_SIZE = 'base'
-DRAW_DENSE = 1
-DRAW_SWAP = 1
+DRAW_DENSE = 0
+DRAW_SWAP = 0
 TEXT_INPUT = False
 SEED = 42
 TIMESTEP = 100
@@ -166,69 +166,69 @@ def compute_pair_feature(model, aug, save_path, files, category, mask=False, dis
                 img1_desc = img1_desc_dino
                 img2_desc = img2_desc_dino
 
-            if DRAW_DENSE:
-                if not Anno:
-                    mask1 = get_mask(model, aug, img1, category[0])
-                    mask2 = get_mask(model, aug, img2, category[-1])
-                if Anno:
-                    mask1 = torch.Tensor(
-                        resize(img1, img_size, resize=True, to_pil=False, edge=EDGE_PAD).mean(-1) > 0).to(device)
-                    mask2 = torch.Tensor(
-                        resize(img2, img_size, resize=True, to_pil=False, edge=EDGE_PAD).mean(-1) > 0).to(device)
-                    print(mask1.shape, mask2.shape, mask1.sum(), mask2.sum())
-                if ONLY_DINO or not FUSE_DINO:
-                    img1_desc = img1_desc / img1_desc.norm(dim=-1, keepdim=True)
-                    img2_desc = img2_desc / img2_desc.norm(dim=-1, keepdim=True)
+            # if DRAW_DENSE:
+            #     if not Anno:
+            #         mask1 = get_mask(model, aug, img1, category[0])
+            #         mask2 = get_mask(model, aug, img2, category[-1])
+            #     if Anno:
+            #         mask1 = torch.Tensor(
+            #             resize(img1, img_size, resize=True, to_pil=False, edge=EDGE_PAD).mean(-1) > 0).to(device)
+            #         mask2 = torch.Tensor(
+            #             resize(img2, img_size, resize=True, to_pil=False, edge=EDGE_PAD).mean(-1) > 0).to(device)
+            #         print(mask1.shape, mask2.shape, mask1.sum(), mask2.sum())
+            #     if ONLY_DINO or not FUSE_DINO:
+            #         img1_desc = img1_desc / img1_desc.norm(dim=-1, keepdim=True)
+            #         img2_desc = img2_desc / img2_desc.norm(dim=-1, keepdim=True)
+            #
+            #     img1_desc_reshaped = img1_desc.permute(0, 1, 3, 2).reshape(-1, img1_desc.shape[-1], num_patches,
+            #                                                                num_patches)
+            #     img2_desc_reshaped = img2_desc.permute(0, 1, 3, 2).reshape(-1, img2_desc.shape[-1], num_patches,
+            #                                                                num_patches)
+            #     trg_dense_output, src_color_map = find_nearest_patchs(mask2, mask1, img2, img1, img2_desc_reshaped,
+            #                                                           img1_desc_reshaped, mask=mask)
+            #
+            #     if not os.path.exists(f'{save_path}/{category[0]}'):
+            #         os.makedirs(f'{save_path}/{category[0]}')
+            #     fig_colormap, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+            #     ax1.axis('off')
+            #     ax2.axis('off')
+            #     ax1.imshow(src_color_map)
+            #     ax2.imshow(trg_dense_output)
+            #     fig_colormap.savefig(f'{save_path}/{category[0]}/{pair_idx}_colormap.png')
+            #     plt.close(fig_colormap)
+            #
+            # if DRAW_SWAP:
+            #     if not DRAW_DENSE:
+            #         mask1 = get_mask(model, aug, img1, category[0])
+            #         mask2 = get_mask(model, aug, img2, category[-1])
+            #
+            #     if (ONLY_DINO or not FUSE_DINO) and not DRAW_DENSE:
+            #         img1_desc = img1_desc / img1_desc.norm(dim=-1, keepdim=True)
+            #         img2_desc = img2_desc / img2_desc.norm(dim=-1, keepdim=True)
+            #
+            #     img1_desc_reshaped = img1_desc.permute(0, 1, 3, 2).reshape(-1, img1_desc.shape[-1], num_patches,
+            #                                                                num_patches)
+            #     img2_desc_reshaped = img2_desc.permute(0, 1, 3, 2).reshape(-1, img2_desc.shape[-1], num_patches,
+            #                                                                num_patches)
+            #     trg_dense_output, src_color_map = find_nearest_patchs_replace(mask2, mask1, img2, img1,
+            #                                                                   img2_desc_reshaped, img1_desc_reshaped,
+            #                                                                   mask=mask, resolution=156)
+            #     if not os.path.exists(f'{save_path}/{category[0]}'):
+            #         os.makedirs(f'{save_path}/{category[0]}')
+            #     fig_colormap, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+            #     ax1.axis('off')
+            #     ax2.axis('off')
+            #     ax1.imshow(src_color_map)
+            #     ax2.imshow(trg_dense_output)
+            #     fig_colormap.savefig(f'{save_path}/{category[0]}/{pair_idx}_swap.png')
+            #     plt.close(fig_colormap)
+            # if not DRAW_SWAP and not DRAW_DENSE:
+            #     result.append([img1_desc.cpu(), img2_desc.cpu()])
+            # else:
+            #     result.append([img1_desc.cpu(), img2_desc.cpu(), mask1.cpu(), mask2.cpu()])
 
-                img1_desc_reshaped = img1_desc.permute(0, 1, 3, 2).reshape(-1, img1_desc.shape[-1], num_patches,
-                                                                           num_patches)
-                img2_desc_reshaped = img2_desc.permute(0, 1, 3, 2).reshape(-1, img2_desc.shape[-1], num_patches,
-                                                                           num_patches)
-                trg_dense_output, src_color_map = find_nearest_patchs(mask2, mask1, img2, img1, img2_desc_reshaped,
-                                                                      img1_desc_reshaped, mask=mask)
 
-                if not os.path.exists(f'{save_path}/{category[0]}'):
-                    os.makedirs(f'{save_path}/{category[0]}')
-                fig_colormap, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
-                ax1.axis('off')
-                ax2.axis('off')
-                ax1.imshow(src_color_map)
-                ax2.imshow(trg_dense_output)
-                fig_colormap.savefig(f'{save_path}/{category[0]}/{pair_idx}_colormap.png')
-                plt.close(fig_colormap)
-
-            if DRAW_SWAP:
-                if not DRAW_DENSE:
-                    mask1 = get_mask(model, aug, img1, category[0])
-                    mask2 = get_mask(model, aug, img2, category[-1])
-
-                if (ONLY_DINO or not FUSE_DINO) and not DRAW_DENSE:
-                    img1_desc = img1_desc / img1_desc.norm(dim=-1, keepdim=True)
-                    img2_desc = img2_desc / img2_desc.norm(dim=-1, keepdim=True)
-
-                img1_desc_reshaped = img1_desc.permute(0, 1, 3, 2).reshape(-1, img1_desc.shape[-1], num_patches,
-                                                                           num_patches)
-                img2_desc_reshaped = img2_desc.permute(0, 1, 3, 2).reshape(-1, img2_desc.shape[-1], num_patches,
-                                                                           num_patches)
-                trg_dense_output, src_color_map = find_nearest_patchs_replace(mask2, mask1, img2, img1,
-                                                                              img2_desc_reshaped, img1_desc_reshaped,
-                                                                              mask=mask, resolution=156)
-                if not os.path.exists(f'{save_path}/{category[0]}'):
-                    os.makedirs(f'{save_path}/{category[0]}')
-                fig_colormap, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
-                ax1.axis('off')
-                ax2.axis('off')
-                ax1.imshow(src_color_map)
-                ax2.imshow(trg_dense_output)
-                fig_colormap.savefig(f'{save_path}/{category[0]}/{pair_idx}_swap.png')
-                plt.close(fig_colormap)
-            if not DRAW_SWAP and not DRAW_DENSE:
-                result.append([img1_desc.cpu(), img2_desc.cpu()])
-            else:
-                result.append([img1_desc.cpu(), img2_desc.cpu(), mask1.cpu(), mask2.cpu()])
-
-    pbar.update(1)
-    return result
+    return img1_desc.cpu(), img2_desc.cpu()
 
 
 def vis_pca_mask(result, save_path):
@@ -465,25 +465,17 @@ def process_images(src_img_path,trg_img_path):
     files = [src_img_path, trg_img_path]
     save_path = './results_vis' + f'/{trg_img_path.split("/")[-1].split(".")[0]}_{src_img_path.split("/")[-1].split(".")[0]}'
     result = compute_pair_feature(model, aug, save_path, files, mask=MASK, category=categories, dist=DIST)
-    if MASK:
-        vis_pca_mask(result, save_path)
-        cluster_and_match(result, save_path)
-    if 'Anno' not in src_img_path:
-        vis_pca(result, save_path,src_img_path,trg_img_path)
+    # if MASK:
+    #     vis_pca_mask(result, save_path)
+    #     cluster_and_match(result, save_path)
+    # if 'Anno' not in src_img_path:
+    #     vis_pca(result, save_path,src_img_path,trg_img_path)
 
     return result
 
 
-# Open an image from the  "images/test_images" folder:
-image = Image.open("images/test_images/test_01.png")
-
-
-# Open PIL Image from ../images/test_images/test_01.png
-pil_image = Image.open("images/test_images/test_01.png")
-
-
 src_img_path = "images/test_images/test_01.png"
-trg_img_path = "images/test_images/test_01_modified.png"
+trg_img_path = "images/test_images/test_01.png"
 result = process_images(src_img_path, trg_img_path)
 
 

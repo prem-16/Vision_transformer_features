@@ -234,7 +234,7 @@ def populate_model_settings():
                     model_settings_frame,
                     StringVar(model_settings_frame, setting_dict["default"]),
                     *setting_dict["options"],
-                    command=lambda event, n=setting_name, s=setting_content: model_manager.apply_setting(
+                    command=lambda event, n=setting_name, s=None: model_manager.apply_setting(
                         n, event
                     )
                 )
@@ -261,6 +261,26 @@ def populate_model_settings():
                         n, s.get()
                     )
                 )
+
+            # Toggle / checkbox
+            elif setting_dict["type"] == "toggle":
+
+                check_box_var = BooleanVar(model_settings_frame, setting_dict["default"])
+
+                setting_content = Checkbutton(
+                    model_settings_frame,
+                    bg=inner_frame_colour,
+                    highlightbackground=LIGHT_GREY,
+                    highlightthickness=0,
+                    # Set default
+                    variable=check_box_var,
+                    command=lambda n=setting_name, s=check_box_var: model_manager.apply_setting(
+                        n, s.get()
+                    )
+                )
+
+                # Register the setting with the model manager
+                model_manager.apply_setting(setting_name, setting_dict["default"])
 
             else:
                 # Create label

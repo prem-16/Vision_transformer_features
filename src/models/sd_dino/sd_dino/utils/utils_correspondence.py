@@ -437,6 +437,63 @@ def co_pca(features1, features2, dim=[128,128,128]):
 
     return features1_gether_s4_s5, features2_gether_s4_s5
 
+
+def co_pca_single_image(features, dim=[128, 128, 128]):
+    processed_features = {}
+    s5_size = features['s5'].shape[-1]
+    s4_size = features['s4'].shape[-1]
+    s3_size = features['s3'].shape[-1]
+    # Get the feature tensors
+    s5 = features['s5'].reshape(features['s5'].shape[0], features['s5'].shape[1], -1)
+    s4 = features['s4'].reshape(features['s4'].shape[0], features['s4'].shape[1], -1)
+    s3 = features['s3'].reshape(features['s3'].shape[0], features['s3'].shape[1], -1)
+
+    # Define the target dimensions
+    target_dims = {'s5': dim[0], 's4': dim[1], 's3': dim[2]}
+
+    # Compute the PCA
+    for name, tensors in zip(['s5', 's4', 's3'], [[s5, s5], [s4, s4], [s3, s3]]):
+        target_dim = target_dims[name]
+
+        # Concatenate the features
+        features = torch.cat(tensors, dim=-1)  # along the spatial dimension
+        features = features.permute(0, 2, 1)  # Bx(t_x+t_y)x(d)
+
+        # equivalent to the above, pytorch implementation
+        mean = torch.mean(features[0], dim=0, keepdim=True)
+        centered_features = features[0] - mean
+        U, S, V = torch.pca_lowrank(centered_features, q=target_dim)
+        reduced_features = torch.matmul(centered_features, V[:, :target_dim])  # (t_x+t_y)x(d)
+        features = reduced_features.unsqueeze(0).permute(0, 2, 1)  # Bx(d)x(t_x+t_y)
+
+        # Split the features
+        processed_features[name] = features[:, :, :features.shape[-1] // 2]  # Bx(d)x(t_x)
+
+    # reshape the features
+    processed_features['s5'] = processed_features['s5'].reshape(processed_features['s5'].shape[0], -1, s5_size, s5_size)
+    processed_features['s4'] = processed_features['s4'].reshape(processed_features['s4'].shape[0], -1, s4_size, s4_size)
+    processed_features['s3'] = processed_features['s3'].reshape(processed_features['s3'].shape[0], -1, s3_size, s3_size)
+
+    # Upsample s5 spatially by a factor of 2
+    processed_features['s5'] = F.interpolate(processed_features['s5'], size=(processed_features['s4'].shape[-2:]),
+                                             mode='bilinear', align_corners=False)
+
+    # Concatenate upsampled_s5 and s4 to create a new s5
+    processed_features['s5'] = torch.cat([processed_features['s4'], processed_features['s5']], dim=1)
+
+    # Set s3 as the new s4
+    processed_features['s4'] = processed_features['s3']
+
+    # Remove s3 from the features dictionary
+    processed_features.pop('s3')
+
+    # current order are layer 8, 5, 2
+    features_gather_s4_s5 = torch.cat([processed_features['s4'], F.interpolate(processed_features['s5'], size=(
+    processed_features['s4'].shape[-2:]), mode='bilinear')], dim=1)
+
+    return features_gather_s4_s5
+
+
 def animate_image_transfer(image1, image2, mapping, output_path):
     import numpy as np
     from PIL import Image
