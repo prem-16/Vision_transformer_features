@@ -2,9 +2,7 @@ import argparse
 
 import gym
 import numpy as np
-from PIL import Image
 import matplotlib.pyplot as plt
-import json
 import math
 import sapien.core as sapien
 from mani_skill2 import make_box_space_readable
@@ -14,13 +12,9 @@ from mani_skill2.utils.wrappers import RecordEpisode
 from mani_skill2 import ASSET_DIR
 from mani_skill2.utils.registration import register_env
 from mani_skill2.envs.pick_and_place.pick_cube import PickCubeEnv
-import gzip
-import os
-import pickle
 from mani_skill2.utils.sapien_utils import look_at
-from src.models.model_gui_manager import ModelGUIManager
-from src.models.model_wrapper_list import MODEL_DICT
-import torch
+
+from src.dataset_collection.helpers import store_data
 
 MS1_ENV_IDS = [
     "OpenCabinetDoor-v1",
@@ -155,14 +149,6 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         cam_cfg.fov = 1.5
         return cam_cfg
 
-def store_data(data, datasets_dir="./test_data"):
-    # save data
-    if not os.path.exists(datasets_dir):
-        os.mkdir(datasets_dir)
-    data_file = os.path.join(datasets_dir, 'data_rotation_apple.pkl.gzip')
-    f = gzip.open(data_file, 'wb')
-    pickle.dump(data, f)
-    f.close()
 
 def transform_points3d(obs, image_points = [443,221]):
     """
