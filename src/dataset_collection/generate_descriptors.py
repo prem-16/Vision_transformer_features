@@ -40,8 +40,8 @@ def generate_descriptors(
     # Iterate over the images
     for i in tqdm(range(number_of_images)):
         # Every n images, print the memory usage
-        if i % 5 == 0:
-            print("torch.cuda.memory_allocated: %fGB"%(torch.cuda.memory_allocated(0)/1024/1024/1024))
+        if i % 1 == 0:
+            print("torch.cuda.memory_allocated: %fGB"%(torch.cuda.max_memory_allocated(0)/1024/1024/1024))
         #   Compute the descriptor
         img = np.array(data['image_rgb'][i])
         descriptor = model_wrapper._compute_descriptors_from_numpy(img, **settings)
@@ -91,6 +91,10 @@ if __name__ == '__main__':
     args = vars(arg.parse_args())
     # Remove this as model name is used later on in the model wrapper.
     args.pop('model', None)
+
+    print("Settings:")
+    for arg_name, arg_value in args.items():
+        print(f"    {arg_name}: {arg_value}")
 
     # Generate the descriptors
     generate_descriptors(

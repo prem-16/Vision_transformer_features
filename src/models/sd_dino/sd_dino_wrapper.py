@@ -29,7 +29,7 @@ class SDDINOWrapper(ModelWrapperBase):
         },
         "only_dino": {
             "type": "toggle",
-            "default": True
+            "default": False
         },
         "dino_v2": {
             "type": "toggle",
@@ -67,8 +67,10 @@ class SDDINOWrapper(ModelWrapperBase):
         torch.backends.cudnn.benchmark = True
 
         if settings['only_dino'] is True:
+            print("Skipping SD model...")
             return None, None
         else:
+            print("Loading SD model...")
             with torch.no_grad():
                 model, aug = load_model(
                     diffusion_ver=settings['ver'],
