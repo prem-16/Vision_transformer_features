@@ -17,6 +17,7 @@ def generate_descriptors(
         model_wrapper: ModelWrapperBase = None,
         dataset_path='test_data',
         descriptor_out='test_data/descriptors',
+        descriptor_name=None,
         settings=None
 ):
     """
@@ -30,6 +31,8 @@ def generate_descriptors(
     assert os.path.exists(dataset_path), "Dataset path does not exist."
     # Assert descriptor out path exists
     assert os.path.exists(descriptor_out), "Descriptor out path does not exist."
+    # Assert descriptor name exists
+    assert descriptor_name is not None, "Descriptor name must exist."
 
     descriptor_list = []
     # Load the dataset
@@ -48,7 +51,7 @@ def generate_descriptors(
         #   Append descriptor to list
         descriptor_list.append(descriptor)
     # Save descriptors list
-    store_data(descriptor_list, descriptor_out)
+    store_data(descriptor_list, descriptor_out, descriptor_name=descriptor_name)
 
 
 if __name__ == '__main__':
@@ -60,6 +63,8 @@ if __name__ == '__main__':
     arg.add_argument('--dataset_path', type=str, default='./test_data')
     # Descriptor save output path
     arg.add_argument('--descriptor_out', type=str, default='./test_data/descriptors')
+    # Descriptor file name
+    arg.add_argument('--descriptor_name', type=str)
     known_args = arg.parse_known_args()[0]
 
     # Get the model wrapper
@@ -101,5 +106,6 @@ if __name__ == '__main__':
         model_wrapper=model_wrapper,
         dataset_path=args.pop('dataset_path', None),
         descriptor_out=args.pop('descriptor_out', None),
+        descriptor_name=args.pop('descriptor_name', None),
         settings=args
     )
