@@ -41,6 +41,12 @@ class SDDINOWrapper(ModelWrapperBase):
             "max": 1000,
             "default": 100,
             "step": 1
+        },
+        "load_size": {
+            "type": "slider",
+            "min": 1,
+            "max": 1000,
+            "default": 224
         }
     }
 
@@ -112,7 +118,8 @@ class SDDINOWrapper(ModelWrapperBase):
                 sd_model, aug = kwargs['model']
 
             # Compute the descriptors
-            img_size = 840 if kwargs['dino_v2'] else 244
+            # img_size = 840 if kwargs['dino_v2'] else 244
+            img_size = kwargs.get('load_size', 840 if kwargs['dino_v2'] else 244)
             model_dict = {
                 'small': 'dinov2_vits14',
                 'base': 'dinov2_vitb14',
