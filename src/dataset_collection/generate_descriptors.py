@@ -36,7 +36,7 @@ def generate_descriptors(
 
     descriptor_list = []
     # Load the dataset
-    data_file = os.path.join(dataset_path, 'data.pkl.gzip')
+    data_file = os.path.join(dataset_path)
     f = gzip.open(data_file, 'rb')
     data = pickle.load(f)
     number_of_images = len(data)
