@@ -57,10 +57,14 @@ class SDDINOWrapper(ModelWrapperBase):
 
     def __init__(self):
         super().__init__()
+        # This cache is used to store the descriptors and similarities for the current images
+        # however it is not persistant between runs.
         self._cache = {}
+        # This cache is used to keep the model in memory between runs.
+        # As it takes minutes to load sd!
+        self._persistant_cache = {}
 
-    @classmethod
-    def _get_sd_model(cls, **settings):
+    def _get_sd_model(self, **settings):
         np.random.seed(settings['seed'])
         torch.manual_seed(settings['seed'])
         torch.cuda.manual_seed(settings['seed'])
@@ -72,11 +76,16 @@ class SDDINOWrapper(ModelWrapperBase):
         else:
             print("Loading SD model...")
             with torch.no_grad():
-                model, aug = load_model(
-                    diffusion_ver=settings['ver'],
-                    image_size=settings['size'],
-                    num_timesteps=settings['t']
-                )
+                if self._persistant_cache.get('model', None) is None:
+                    model, aug = load_model(
+                        diffusion_ver=settings['ver'],
+                        image_size=settings['size'],
+                        num_timesteps=settings['t']
+                    )
+                    self._persistant_cache['model'] = model
+                    self._persistant_cache['aug'] = aug
+                else:
+                    model, aug = self._persistant_cache['model'], self._persistant_cache['aug']
             return model, aug
 
     @classmethod
