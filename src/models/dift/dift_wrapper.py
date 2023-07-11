@@ -53,8 +53,7 @@ class DIFTWrapper(ModelWrapperBase):
         super().__init__()
         self._cache = {}
 
-    @classmethod
-    def _compute_descriptors(cls, image: Image.Image, **kwargs):
+    def _compute_descriptors(self, image: Image.Image, **kwargs):
         with torch.no_grad():
             if kwargs.get('model', None) is None:
                 dift = SDFeaturizer(kwargs['model_type'])

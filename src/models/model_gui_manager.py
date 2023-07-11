@@ -85,7 +85,7 @@ class ModelGUIManager:
         self._set_dirty()
 
     def apply_setting(self, setting_name, setting_value):
-        if self._settings.get(setting_name, None) != setting_value:
+        if self._settings.get(setting_name, None) != setting_value or setting_name not in self._settings:
             self._settings[setting_name] = setting_value
             print("Applied setting ", setting_name, " with value ", setting_value)
             self._set_dirty()

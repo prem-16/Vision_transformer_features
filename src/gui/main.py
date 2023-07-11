@@ -22,7 +22,7 @@ image_data = read_data(datasets_dir="./test_data")
 
 # = image_data["image_rgb"]
 model_manager = ModelGUIManager()
-model_manager.update_model("DinoViT")
+model_manager.update_model("DINO_VIT")
 
 left_image_id = 0
 right_image_id = 0
@@ -199,6 +199,13 @@ def populate_model_settings():
         row_id = 0
         # Populate the frame with the settings
         for setting_name, setting_dict in settings.items():
+
+            if setting_dict["type"] == "hidden":
+                # Create a hidden setting
+                model_manager.apply_setting(setting_name, setting_dict["default"])
+                # Skip this iteration
+                continue
+
             # Create a label for the setting
             setting_label = Label(model_settings_frame, text=f"{str(setting_name).capitalize()}:",
                                   bg=inner_frame_colour)

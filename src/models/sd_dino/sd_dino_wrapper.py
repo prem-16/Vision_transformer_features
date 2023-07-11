@@ -43,22 +43,58 @@ class SDDINOWrapper(ModelWrapperBase):
             "step": 1
         },
         "load_size": {
+            # Should be a multiple of 14 for DINOv2
             "type": "slider",
             "min": 1,
             "max": 1000,
             "default": 224
+        },
+        "stride": {
+            # Totally dependent on chosen settings
+            "type": "hidden",
+            "default": None
+        },
+        "facet": {
+            # Totally dependent on chosen settings
+            "type": "hidden",
+            "default": None
+        },
+        "text_input": {
+            "type": "hidden",
+            "default": None
+        },
+        "pca_dims": {
+            "type": "hidden",
+            "default": [256, 256, 256]
+        },
+        "seed": {
+            "type": "hidden",
+            "default": 42
+        },
+        "edge_pad": {
+            "type": "hidden",
+            "default": False
+        },
+        "pca": {
+            "type": "hidden",
+            "default": False
+        },
+        "ver": {
+            "type": "hidden",
+            "default": "v1-5"
+        },
+        "image_size": {
+            "type": "hidden",
+            "default": 960
+        },
+        "model_size": {
+            "type": "hidden",
+            "default": "base"
+        },
+        "layer": {
+            "type": "hidden",
+            "default": None
         }
-    }
-
-    OTHER_SETTINGS = {
-        "ver": "v1-5",
-        "pca_dims": [256, 256, 256],
-        "size": 960,
-        "model_size": "base",
-        "text_input": None,
-        "seed": 42,
-        "edge_pad": False,
-        "pca": False
     }
 
     def __init__(self):
@@ -71,10 +107,10 @@ class SDDINOWrapper(ModelWrapperBase):
         self._persistant_cache = {}
 
     def _get_sd_model(self, **settings):
-        np.random.seed(settings['seed'])
-        torch.manual_seed(settings['seed'])
-        torch.cuda.manual_seed(settings['seed'])
-        torch.backends.cudnn.benchmark = True
+        # np.random.seed(settings['seed'])
+        # torch.manual_seed(settings['seed'])
+        # torch.cuda.manual_seed(settings['seed'])
+        # torch.backends.cudnn.benchmark = True
 
         if settings['only_dino'] is True:
             print("Skipping SD model...")
@@ -85,7 +121,7 @@ class SDDINOWrapper(ModelWrapperBase):
                 if self._persistant_cache.get('model', None) is None:
                     model, aug = load_model(
                         diffusion_ver=settings['ver'],
-                        image_size=settings['size'],
+                        image_size=settings['model_size'],
                         num_timesteps=settings['t']
                     )
                     self._persistant_cache['model'] = model
@@ -94,11 +130,7 @@ class SDDINOWrapper(ModelWrapperBase):
                     model, aug = self._persistant_cache['model'], self._persistant_cache['aug']
             return model, aug
 
-    @classmethod
-    def _compute_descriptors(cls, image: Image.Image, **kwargs):
-
-        # Combine **kwargs with OTHER_SETTINGS, ensuring that kwargs takes precedence
-        kwargs = {**cls.OTHER_SETTINGS, **kwargs}
+    def _compute_descriptors(self, image: Image.Image, **kwargs):
 
         is_dino_v2 = kwargs['dino_v2']
         is_dino_only = kwargs['only_dino']
@@ -113,7 +145,7 @@ class SDDINOWrapper(ModelWrapperBase):
 
         with torch.no_grad():
             if kwargs.get('model', None) is None:
-                sd_model, aug = cls._get_sd_model(**kwargs)
+                sd_model, aug = self._get_sd_model(**kwargs)
             else:
                 sd_model, aug = kwargs['model']
 
@@ -128,22 +160,34 @@ class SDDINOWrapper(ModelWrapperBase):
             }
 
             model_type = model_dict[kwargs['model_size']] if is_dino_v2 else 'dino_vits8'
-            layer = 11 if is_dino_v2 else 9
 
-            if 'l' in model_type:
-                layer = 23
-            elif 'g' in model_type:
-                layer = 39
-            facet = 'token' if is_dino_v2 else 'key'
-            stride = 14 if is_dino_v2 else 4
+            # Define layer
+            layer = kwargs.get('layer', None)
+            if layer is None:
+                # Large
+                if 'l' in model_type:
+                    layer = 23
+                # Giant
+                elif 'g' in model_type:
+                    layer = 39
+                else:
+                    layer = 11 if is_dino_v2 else 9
+
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+            # Stride and facet are determined by the chosen settings
+            # However they can be overrided.
+            stride = kwargs.get('stride', None)
+            facet = kwargs.get('facet', None)
+            stride = stride if stride is not None else (14 if is_dino_v2 else 4)
+            facet = facet if facet is not None else ('token' if is_dino_v2 else 'key')
 
             extractor = ViTExtractor(model_type, stride, device=device)
             patch_size = extractor.model.patch_embed.patch_size[
                 0] if is_dino_v2 else extractor.model.patch_embed.patch_size
             num_patches = int(patch_size / stride * (img_size // patch_size - 1) + 1)
 
-            input_text = kwargs['text_input']
+            input_text = kwargs.get('text_input', None)
 
             # Resize the image
             image = image.convert('RGB')
@@ -152,38 +196,41 @@ class SDDINOWrapper(ModelWrapperBase):
             image = resize(image, img_size, resize=True, to_pil=True, edge=kwargs['edge_pad'])
 
             with torch.no_grad():
-                if not is_combine_pca:
-                    if not is_dino_only:
+                # Stable Diffusion
+                if is_dino_only is False:
+                    if is_combine_pca is False:
+                        # Don't use PCA
                         image_desc = process_features_and_mask(
                             sd_model, aug, image_input, input_text=input_text, mask=False, pca=kwargs['pca']
                         ).reshape(1, 1, -1, num_patches ** 2).permute(
                             0, 1, 3, 2
                         )
-                    if is_dino_fuse:
-                        image_batch = extractor.preprocess_pil(image)
-                        image_desc_dino = extractor.extract_descriptors(image_batch.to(device), layer, facet)
-
-                else:
-                    if not is_dino_only:
+                    else:
+                        # Use PCA
                         features = process_features_and_mask(
                             sd_model, aug, image_input, input_text=input_text, mask=False, raw=True
                         )
                         processed_features1 = co_pca_single_image(features, kwargs['pca_dims'])
                         image_desc = processed_features1.reshape(1, 1, -1, num_patches ** 2).permute(0, 1, 3, 2)
-                    if is_dino_fuse:
-                        image_batch = extractor.preprocess_pil(image)
-                        image_desc_dino = extractor.extract_descriptors(image_batch.to(device), layer, facet)
+
+                # DINO
+                if is_dino_fuse:
+                    image_batch = extractor.preprocess_pil(image)
+                    image_desc_dino = extractor.extract_descriptors(image_batch.to(device), layer, facet)
 
                 if dist == 'l1' or dist == 'l2':
                     # Normalize the features
                     image_desc = image_desc / image_desc.norm(dim=-1, keepdim=True)
+                    # If DINO
                     if is_dino_fuse:
                         image_desc_dino = image_desc_dino / image_desc_dino.norm(dim=-1, keepdim=True)
 
+                # If SD + DINO
                 if is_dino_fuse and not is_dino_only:
                     # Cat two features together
                     image_desc = torch.cat((image_desc, image_desc_dino), dim=-1)
 
+                # If DINO only
                 if is_dino_only:
                     image_desc = image_desc_dino
 
@@ -201,12 +248,9 @@ class SDDINOWrapper(ModelWrapperBase):
         :return: A dictionary of the descriptors, similarities and other information.
         """
 
-        # Combine **kwargs with OTHER_SETTINGS, ensuring that settings takes precedence
-        kwargs = {**self.OTHER_SETTINGS, **settings}
-
         # Important if you don't want your GPU to blow up
         with torch.no_grad():
-            sd_model_contents = self._get_sd_model(**kwargs)
+            sd_model_contents = self._get_sd_model(**settings)
 
             # Compute the descriptors
             descriptor_dump_1 = self._compute_descriptors_from_dir(image_dir_1, model=sd_model_contents, **settings)

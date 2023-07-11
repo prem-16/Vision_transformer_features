@@ -8,7 +8,7 @@ from src.models.model_wrapper import ModelWrapperBase
 
 
 class DinoVITWrapper(ModelWrapperBase):
-    NAME = "DinoViT"
+    NAME = "DINO_VIT"
 
     SETTINGS = {
         "stride": {
@@ -59,8 +59,7 @@ class DinoVITWrapper(ModelWrapperBase):
         super().__init__()
         self._cache = {}
 
-    @classmethod
-    def _compute_descriptors(cls, image_pil: Image.Image, **kwargs):
+    def _compute_descriptors(self, image_pil: Image.Image, **kwargs):
         """
         Computes the descriptors for the image.
         :param image_dir: The directory of the image.

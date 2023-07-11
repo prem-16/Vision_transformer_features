@@ -70,8 +70,7 @@ class ModelWrapperBase(ABC):
         # Set cache
         self._cache = cache
 
-    @classmethod
-    def _compute_descriptors(cls, image: Image.Image, **kwargs):
+    def _compute_descriptors(self, image: Image.Image, **kwargs):
         """
         Computes the descriptors for the image.
         :param image: The image.
@@ -80,8 +79,7 @@ class ModelWrapperBase(ABC):
         """
         raise NotImplementedError("Not implemented!")
 
-    @classmethod
-    def _compute_descriptors_from_numpy(cls, image: np.ndarray, **kwargs):
+    def _compute_descriptors_from_numpy(self, image: np.ndarray, **kwargs):
         """
         Computes the descriptors for the image.
         :param image: The image.
@@ -89,10 +87,9 @@ class ModelWrapperBase(ABC):
         :return: descriptors and dictionary of other information.
         """
         image = Image.fromarray(image)
-        return cls._compute_descriptors(image, **kwargs)
+        return self._compute_descriptors(image, **kwargs)
 
-    @classmethod
-    def _compute_descriptors_from_dir(cls, image_dir, **kwargs):
+    def _compute_descriptors_from_dir(self, image_dir, **kwargs):
         """
         Computes the descriptors for the image.
         :param image_dir: The directory of the image.
@@ -100,7 +97,7 @@ class ModelWrapperBase(ABC):
         :return: descriptors and dictionary of other information.
         """
         image = Image.open(image_dir).convert("RGB")
-        return cls._compute_descriptors(image, **kwargs)
+        return self._compute_descriptors(image, **kwargs)
 
     @staticmethod
     def _get_descriptor_index_from_point(point, num_patches):
@@ -193,13 +190,3 @@ class ModelWrapperBase(ABC):
         heatmap = heatmap.copy()
 
         return self.get_heatmap_vis_from_pil(image_2, point, heatmap=heatmap)
-
-    def compute_descriptors_from_pkl_sequence(self, sequence_pkl_dir):
-        """
-        Compute descriptors from a sequence pkl file.
-        :param sequence_pkl_dir: The directory of the sequence pkl file.
-        :return: Descriptors
-        """
-        # TODO use _compute_descriptors
-        pass
-
