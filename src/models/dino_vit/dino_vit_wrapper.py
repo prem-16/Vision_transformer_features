@@ -8,7 +8,11 @@ from src.models.model_wrapper import ModelWrapperBase
 
 
 class DinoVITWrapper(ModelWrapperBase):
+<<<<<<< Updated upstream
     NAME = "DINO_VIT"
+=======
+    NAME = ""
+>>>>>>> Stashed changes
 
     SETTINGS = {
         "stride": {

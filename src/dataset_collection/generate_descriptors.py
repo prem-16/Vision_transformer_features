@@ -12,6 +12,7 @@ import numpy as np
 from src.models.model_wrapper import ModelWrapperBase
 from src.models.model_wrapper_list import MODEL_DICT
 
+import time
 
 def generate_descriptors(
         model_wrapper: ModelWrapperBase = None,
@@ -40,7 +41,7 @@ def generate_descriptors(
     for i in tqdm(range(number_of_images)):
         # Every n images, print the memory usage
         if i % 1 == 0:
-            print("torch.cuda.memory_allocated: %fGB"%(torch.cuda.max_memory_allocated(0)/1024/1024/1024))
+            print("torch.cuda.memory_allocated: %fGB" % (torch.cuda.max_memory_allocated(0)/1024/1024/1024))
         #   Compute the descriptor
         img = np.array(data['image_rgb'][i])
         descriptor = model_wrapper._compute_descriptors_from_numpy(img, **settings)
@@ -55,6 +56,9 @@ def generate_descriptors(
 
     # Split the descriptor path into path and file name
     descriptor_dir, descriptor_filename = os.path.split(descriptor_path)
+    _, dataset_name = os.path.split(dataset_path)
+    # Define descriptor filename with timestamp at end
+    descriptor_filename = dataset_name.replace("data_", f"descriptor_{time.strftime('%Y_%m_%d-%H_%M_%S')}")
     store_data(descriptor_save_dict, descriptor_dir, descriptor_name=descriptor_filename)
 
 
@@ -64,9 +68,9 @@ if __name__ == '__main__':
     # Model 
     arg.add_argument('--model', type=str, default='DinoViT')
     # Data set path
-    arg.add_argument('--dataset_path', type=str, default='./test_data')
+    arg.add_argument('--dataset_path', type=str, default='./test_data/data.pkl.gzip')
     # Descriptor save output path
-    arg.add_argument('--descriptor_path', type=str, default='./test_data/descriptors')
+    arg.add_argument('--descriptor_dir', type=str, default='./test_data/descriptors')
     known_args = arg.parse_known_args()[0]
 
     # Get the model wrapper

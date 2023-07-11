@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import math
 import sapien.core as sapien
 from mani_skill2 import make_box_space_readable
+from mani_skill2.envs.pick_and_place.pick_clutter import PickClutterEnv
 from mani_skill2.envs.sapien_env import BaseEnv
 from mani_skill2.utils.visualization.cv2_utils import OpenCVViewer
 from mani_skill2.utils.wrappers import RecordEpisode
@@ -15,6 +16,7 @@ from mani_skill2.envs.pick_and_place.pick_cube import PickCubeEnv
 from mani_skill2.utils.sapien_utils import look_at
 from mani_skill2.utils.sapien_utils import set_render_material
 from src.dataset_collection.helpers import store_data
+from typing import List
 
 
 from data_agent import DataAgent
@@ -80,13 +82,79 @@ class DomainRandomizationPickCubeEnv(PickCubeEnv):
             for rs in vb.get_render_shapes():
                 set_render_material(rs.material, color=np.hstack([color, 1.0]))
 
+@register_env("PickMultiYCBInReplicaCAD-v0", max_episode_steps=200, override=True)
+class PickMultiYCBInReplicaCAD(PickClutterEnv):
+    DEFAULT_EPISODE_JSON = "{ASSET_DIR}/pick_clutter/ycb_train_5k.json.gz"
+
+    def _load_actors(self):
+        self.objs: List[sapien.Actor] = []
+        object_name = ["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "002_master_chef_can","077_rubiks_cube", "035_power_drill", "005_tomato_soup_can", "003_cracker_box"]
+        # Add Multiple objects
+        for object in object_name:
+            builder = self._scene.create_actor_builder()
+            model_dir = ASSET_DIR / "mani_skill2_ycb/models" / object
+            collision_file = str(model_dir / "collision.obj")
+            builder.add_multiple_collisions_from_file(
+                filename=collision_file, density=1000
+            )
+            visual_file = str(model_dir / "textured.obj")
+            builder.add_visual_from_file(filename=visual_file)
+
+            obj = builder.build(name=object)
+            self.objs.append(obj)
+        self.target_site = self._build_sphere_site(
+            0.01, color=(1, 1, 0), name="_target_site"
+        )
+        self.goal_site = self._build_sphere_site(
+            0.01, color=(0, 1, 0), name="_goal_site"
+        )
+
+        # -------------------------------------------------------------------------- #
+        # Load static scene
+        # -------------------------------------------------------------------------- #
+        builder = self._scene.create_actor_builder()
+        path = f"{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
+        pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
+        # NOTE: use nonconvex collision for static scene
+        builder.add_nonconvex_collision_from_file(path, pose)
+        builder.add_visual_from_file(path, pose)
+        self.arena = builder.build_static()
+        offsets = [np.array([2.5, -5, 0.9]), np.array([0.5, -0.2, 0.5]), np.array([2.3, 1.4, 0.5])]
+        # Add offset to place the workspace at... (uncomment the background you want and comment the other offset)
+        # offset = np.array([-1.9, 2, 0.9]) # another shelf (awkward angle, need to rotate camera)
+        # offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
+        # offset = np.array([2.3, 1.4, 0.5]) # stairs
+        # offset = np.array([-1.5, -1, 0.3]) # carpet
+        offset = np.array([-1.5, -1, 0.3])  # carpet
+        # offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera)
+        # offset = np.array([1.3, 3.7, 0.5]) # dark room
+        # offset = np.array([4.2, 0.5, 0.8]) # bicycle
+        # offset = np.array([4.1, -5.3, 0.9]) # corner of a sofa
+        # offset = np.array([2.5, -5, 0.9]) # carpet
+        self.arena.set_pose(sapien.Pose(-offset))
+
+    def initialize_episode(self):
+        super().initialize_episode()
+
+        # Rotate the robot for better visualization
+        self.agent.robot.set_pose(
+            sapien.Pose([0, -0.56, 0], [0.707, 0, 0, 0.707])  # original
+
+        )
+
+    def _register_render_cameras(self):
+        cam_cfg = super()._register_render_cameras()
+        cam_cfg.p = cam_cfg.p + [0.5, 0.5, -0.095]
+        cam_cfg.fov = 1.5
+        return cam_cfg
+
 @register_env("PickYCBInReplicaCAD-v0", max_episode_steps=200, override=True)
 class PickYCBInReplicaCAD(PickCubeEnv):
     def _load_actors(self):
         # Load YCB objects 
         # It is the same as in PickSingleYCB-v0, just for illustration here
         builder = self._scene.create_actor_builder()
-        object_name =np.random.choice(["025_mug", "017_orange","024_bowl" ,"011_banana" , ""])
+        object_name =np.random.choice(["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "012_strawberry0", "037_scissors" , "072-b_toy_airplane", "077_rubiks_cube"])
         model_dir = ASSET_DIR / "mani_skill2_ycb/models" / object_name# change object here
         scale = self.cube_half_size / 0.01887479572529618
         collision_file = str(model_dir / "collision.obj")
@@ -187,6 +255,7 @@ def main():
 
     env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if you want to use default background)
         "PickYCBInReplicaCAD-v0",
+        #"PickMultiYCBInReplicaCAD-v0",
         obs_mode=args.obs_mode,
 
         render_camera_cfgs=dict(width=640, height=480),

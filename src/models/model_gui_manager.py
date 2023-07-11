@@ -1,3 +1,6 @@
+import gzip
+import pickle
+
 from src.models.model_wrapper_list import MODEL_DICT
 import numpy as np
 
@@ -9,7 +12,7 @@ class ModelGUIManager:
 
     def __init__(self):
         self._settings = None
-        self._selected_model = None
+        self.selected_model = None
         # A flag to indicate that processing is required.
         self._dirty = True
         self._image_dir_1 = None
@@ -19,11 +22,11 @@ class ModelGUIManager:
 
     @property
     def model_name(self):
-        return self._selected_model.NAME
+        return self.selected_model.NAME
 
     @property
     def model(self):
-        return self._selected_model
+        return self.selected_model
 
     @property
     def image_dir_1(self):
@@ -80,7 +83,7 @@ class ModelGUIManager:
 
     def update_model(self, model_name):
         assert model_name in MODEL_DICT, f"Model {model_name} not found!"
-        self._selected_model = MODEL_DICT[model_name]()
+        self.selected_model = MODEL_DICT[model_name]()
         self._settings = {}
         self._set_dirty()
 
@@ -97,7 +100,7 @@ class ModelGUIManager:
         :param image_dir_2: The directory of the second image.
         :return: None
         """
-        self._selected_model.process_image_pair(self._image_dir_1, self._image_dir_2, self._settings)
+        self.selected_model.process_image_pair(self._image_dir_1, self._image_dir_2, self._settings)
         self._dirty = False
 
     def get_heatmap_vis(self, point):
@@ -110,6 +113,36 @@ class ModelGUIManager:
         """
         if self._dirty:
             self.process_images()
-        vis, heatmap = self._selected_model.get_heatmap_vis(self._image_dir_2, point)
+        vis, heatmap = self.selected_model.get_heatmap_vis(self._image_dir_2, point)
         return vis, heatmap
 
+    def build_cache_from_pkl_gzip(self, pkl_path, ref_index):
+        """
+        Build class and create cache from pkl gzip file.
+
+        :param desc_pkl_path_1:
+        :param desc_pkl_path_2:
+        :return:
+        """
+
+        # Load descriptors from pickle files
+        #   Extract gzip
+        f = gzip.open(pkl_path, 'rb')
+        #   Load pkl
+        pkl = pickle.load(f)
+
+        # Get the contents of the pkl
+        if isinstance(pkl, dict):
+            descriptors = pkl['descriptors']
+            settings = pkl['settings']
+        elif isinstance(pkl, list):
+            descriptors = pkl
+            settings = None
+        else:
+            raise ValueError("Incorrect type.")
+        # Build cache
+        cache = self._build_similarity_cache_from_descriptor_dump(descriptors[0], descriptors[ref_index])
+
+        # Set cache
+        self.selected_model._cache = cache
+        self._settings = settings
