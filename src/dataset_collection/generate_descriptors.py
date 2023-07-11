@@ -90,6 +90,9 @@ if __name__ == '__main__':
             setting_type = bool
         elif tkinter_type == 'text':
             setting_type = str
+        elif tkinter_type == 'hidden':
+            # Setting type is type of default value
+            setting_type = type(setting_content.get('default', None))
 
         # Add the argument
         arg.add_argument(
