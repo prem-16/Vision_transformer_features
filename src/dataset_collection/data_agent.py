@@ -38,7 +38,8 @@ class DataAgent:
         self.action = None
         self.episode_count = 0
 
-    def _euler_from_quaternion(self, x, y, z, w):
+    @staticmethod
+    def _euler_from_quaternion(x, y, z, w):
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
         roll is rotation around x in radians (counterclockwise)
