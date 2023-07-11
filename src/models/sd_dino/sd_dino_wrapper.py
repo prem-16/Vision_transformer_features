@@ -83,10 +83,6 @@ class SDDINOWrapper(ModelWrapperBase):
             "type": "hidden",
             "default": "v1-5"
         },
-        "image_size": {
-            "type": "hidden",
-            "default": 960
-        },
         "model_type": {
             "type": "hidden",
             "default": "base"
