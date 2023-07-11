@@ -17,7 +17,7 @@ import time
 def generate_descriptors(
         model_wrapper: ModelWrapperBase = None,
         dataset_path=None,
-        descriptor_path=None,
+        descriptor_dir=None,
         settings=None
 ):
     """
@@ -30,7 +30,7 @@ def generate_descriptors(
     # Assert dataset path exists
     assert os.path.exists(dataset_path), "Dataset path does not exist."
     # Assert descriptor path exists
-    assert os.path.exists(descriptor_path), "Descriptor path does not exist."
+    assert os.path.exists(descriptor_dir), "Descriptor path does not exist."
 
     descriptor_list = []
     # Load the dataset
@@ -55,7 +55,7 @@ def generate_descriptors(
     }
 
     # Split the descriptor path into path and file name
-    descriptor_dir, descriptor_filename = os.path.split(descriptor_path)
+    descriptor_dir, descriptor_filename = os.path.split(descriptor_dir)
     _, dataset_name = os.path.split(dataset_path)
     # Define descriptor filename with timestamp at end
     descriptor_filename = dataset_name.replace("data_", f"descriptor_{time.strftime('%Y_%m_%d-%H_%M_%S')}")
@@ -114,6 +114,6 @@ if __name__ == '__main__':
     generate_descriptors(
         model_wrapper=model_wrapper,
         dataset_path=args.pop('dataset_path', None),
-        descriptor_path=args.pop('descriptor_path', None),
+        descriptor_dir=args.pop('descriptor_dir', None),
         settings=args
     )
