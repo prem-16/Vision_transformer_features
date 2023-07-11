@@ -87,7 +87,7 @@ class SDDINOWrapper(ModelWrapperBase):
             "type": "hidden",
             "default": 960
         },
-        "model_size": {
+        "model_type": {
             "type": "hidden",
             "default": "base"
         },
@@ -121,7 +121,7 @@ class SDDINOWrapper(ModelWrapperBase):
                 if self._persistant_cache.get('model', None) is None:
                     model, aug = load_model(
                         diffusion_ver=settings['ver'],
-                        image_size=settings['model_size'],
+                        image_size=settings['model_type'],
                         num_timesteps=settings['t']
                     )
                     self._persistant_cache['model'] = model
@@ -159,7 +159,7 @@ class SDDINOWrapper(ModelWrapperBase):
                 'giant': 'dinov2_vitg14'
             }
 
-            model_type = model_dict[kwargs['model_size']] if is_dino_v2 else 'dino_vits8'
+            model_type = model_dict[kwargs['model_type']] if is_dino_v2 else 'dino_vits8'
 
             # Define layer
             layer = kwargs.get('layer', None)
