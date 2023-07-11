@@ -17,7 +17,7 @@ import time
 def generate_descriptors(
         model_wrapper: ModelWrapperBase = None,
         dataset_path=None,
-        descriptor_path=None,
+        descriptor_dir=None,
         settings=None
 ):
     """
@@ -114,6 +114,6 @@ if __name__ == '__main__':
     generate_descriptors(
         model_wrapper=model_wrapper,
         dataset_path=args.pop('dataset_path', None),
-        descriptor_path=args.pop('descriptor_path', None),
+        descriptor_dir=args.pop('descriptor_dir', None),
         settings=args
     )
