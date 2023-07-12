@@ -36,7 +36,7 @@ def generate_descriptors(
     # Load the dataset
     f = gzip.open(dataset_path, 'rb')
     data = pickle.load(f)
-    number_of_images = len(data)
+    number_of_images = len(data['image_rgb'])
     # Iterate over the images
     for i in tqdm(range(number_of_images)):
         # Every n images, print the memory usage
