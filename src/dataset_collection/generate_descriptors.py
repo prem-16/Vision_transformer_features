@@ -37,11 +37,7 @@ def generate_descriptors(
     f = gzip.open(dataset_path, 'rb')
     data = pickle.load(f)
     number_of_images = len(data['image_rgb'])
-<<<<<<< Updated upstream
-    # Iterate over the images
-=======
-     # Iterate over the images
->>>>>>> Stashed changes
+
     for i in tqdm(range(number_of_images)):
         # Every n images, print the memory usage
         if i % 1 == 0:
@@ -62,7 +58,8 @@ def generate_descriptors(
     descriptor_dir, descriptor_filename = os.path.split(descriptor_dir)
     _, dataset_name = os.path.split(dataset_path)
     # Define descriptor filename with timestamp at end
-    descriptor_filename = dataset_name.replace("data_", f"descriptor_{time.strftime('%Y_%m_%d-%H_%M_%S')}")
+    descriptor_filename = dataset_name.replace("data_",
+                                               f"descriptor_{model_wrapper.NAME}_{time.strftime('%Y_%m_%d-%H_%M_%S')}")
     store_data(descriptor_save_dict, descriptor_dir, descriptor_name=descriptor_filename)
 
 
