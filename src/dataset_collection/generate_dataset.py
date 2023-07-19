@@ -84,9 +84,12 @@ class DomainRandomizationPickCubeEnv(PickCubeEnv):
 
 @register_env("PickMultiYCBInReplicaCAD-v0", max_episode_steps=200, override=True)
 class PickMultiYCBInReplicaCAD(PickClutterEnv):
-    DEFAULT_EPISODE_JSON = "{ASSET_DIR}/pick_clutter/ycb_train_5k.json.gz"
+    DEFAULT_EPISODE_JSON = "{ASSET_DIR}/ycb_train_5k.json.gz"
+    DEFAULT_ASSET_ROOT = "{ASSET_DIR}/mani_skill2_ycb"
+    DEFAULT_MODEL_JSON = "info_pick_v0.json"
 
     def _load_actors(self):
+        self.bbox_sizes = []
         self.objs: List[sapien.Actor] = []
         object_name = ["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "002_master_chef_can","077_rubiks_cube", "035_power_drill", "005_tomato_soup_can", "003_cracker_box"]
         # Add Multiple objects
@@ -102,6 +105,10 @@ class PickMultiYCBInReplicaCAD(PickClutterEnv):
 
             obj = builder.build(name=object)
             self.objs.append(obj)
+
+            bbox = self.model_db[object]["bbox"]
+            bbox_size = np.array(bbox["max"]) - np.array(bbox["min"])
+            self.bbox_sizes.append(bbox_size)
         self.target_site = self._build_sphere_site(
             0.01, color=(1, 1, 0), name="_target_site"
         )
@@ -154,7 +161,7 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         # Load YCB objects 
         # It is the same as in PickSingleYCB-v0, just for illustration here
         builder = self._scene.create_actor_builder()
-        object_name =np.random.choice(["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "012_strawberry0", "037_scissors" , "072-b_toy_airplane", "077_rubiks_cube"])
+        object_name =np.random.choice(["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "037_scissors" , "072-b_toy_airplane", "077_rubiks_cube"])
         model_dir = ASSET_DIR / "mani_skill2_ycb/models" / object_name# change object here
         scale = self.cube_half_size / 0.01887479572529618
         collision_file = str(model_dir / "collision.obj")
@@ -184,7 +191,7 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         #offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
         #offset = np.array([2.3, 1.4, 0.5]) # stairs
         #offset = np.array([-1.5, -1, 0.3]) # carpet
-        offset =  np.array([-1.5, -1, 0.3]) # carpet
+        offset =  np.array([-1.5, -1, 0.1]) # carpet
         #offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera) 
         #offset = np.array([1.3, 3.7, 0.5]) # dark room
         #offset = np.array([4.2, 0.5, 0.8]) # bicycle
@@ -292,7 +299,7 @@ def main():
     after_reset = True
     data_agent = DataAgent(env, args.env_id,args.control_mode, num_steps= 100)
 
-    transformation = "translation_Z"
+    transformation = "rotation_Z"
     num_episodes = 5
     for i in range(num_episodes):
         print("episode", i + 1)
