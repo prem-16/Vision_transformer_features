@@ -49,7 +49,6 @@ def generate_descriptors(
     descriptor_filename += f"_{dataset_name}"
 
     # If the descriptor already exists, and ignore_duplicates is True, then return
-    print("DESCRIPTOR DIR", os.path.join(descriptor_dir, descriptor_filename))
     if os.path.exists(os.path.join(descriptor_dir, descriptor_filename)) and ignore_duplicates is True:
         print("Descriptor already exists and ignore_duplicates is True. Returning.")
         return

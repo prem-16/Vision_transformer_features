@@ -2,6 +2,7 @@ import numpy as np
 import open_clip
 import torch
 from PIL import Image
+from open_clip import image_transform
 from torch.nn import Module
 
 from src.models.model_wrapper import ModelWrapperBase
@@ -48,7 +49,11 @@ class DinoVITWrapper(ModelWrapperBase):
                 "0", "1", "2"
             ],
             "default": "1"
-        }
+        },
+        "load_size": {
+            "type": "hidden",
+            "default": 320
+        },
     }
 
     def __init__(self):
@@ -60,14 +65,18 @@ class DinoVITWrapper(ModelWrapperBase):
         with torch.no_grad():
             if self._persistant_cache.get('model', None) is None:
                 # Load model
-                model, _, preprocess = open_clip.create_model_and_transforms(settings["model_type"][0],
+                model, _, _ = open_clip.create_model_and_transforms(settings["model_type"][0],
                                                                              pretrained=settings["model_type"][1])
+                preprocess = image_transform(
+                    settings['load_size'], is_train=False, mean=None, std=None
+                )
+                print("Image Size ", model.visual.image_size)
                 self._persistant_cache['model'] = model
                 self._persistant_cache['preprocess'] = preprocess
 
                 # Record gradients for the following layer:
                 layer = model.visual.trunk.stages._modules[settings['layer']].blocks._modules[settings['block']]
-                 # an empty dictionary
+
                 def hook_func(m, inp, op):
                     self._persistant_cache['feat'] = op.detach()
 
