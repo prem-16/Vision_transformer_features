@@ -20,6 +20,8 @@ def generate_descriptors(
         dataset_path=None,
         descriptor_dir=None,
         identifier=None,
+        disable_timestamp=False,
+        ignore_duplicates=False,
         settings=None
 ):
     """
@@ -28,18 +30,36 @@ def generate_descriptors(
 
     assert model_wrapper is not None, "Model wrapper is None."
     # Print current path
-    print("Current path: %s"%(os.getcwd()))
+    print("Current path: %s" % (os.getcwd()))
     # Assert dataset path exists
     assert os.path.exists(dataset_path), "Dataset path does not exist."
     # Assert descriptor path exists
     assert os.path.exists(descriptor_dir), "Descriptor path does not exist."
 
-    descriptor_list = []
+    # Get descriptor_filename
+    _, dataset_name = os.path.split(dataset_path)
+    # Define descriptor filename with timestamp at end
+    descriptor_filename = f"descriptor_{model_wrapper.NAME}"
+    if identifier is not None:
+        descriptor_filename = f"(id_{identifier})_{descriptor_filename}"
+    if disable_timestamp is False:
+        descriptor_filename = f"{descriptor_filename}_{time.strftime('%Y_%m_%d-%H_%M_%S')}"
+    # Add the filename (with .pkl.gzip)
+    descriptor_filename += f"_{dataset_name}"
+
+    # If the descriptor already exists, and ignore_duplicates is True, then return
+    print("DESCRIPTOR DIR", os.path.join(descriptor_dir, descriptor_filename))
+    if os.path.exists(os.path.join(descriptor_dir, descriptor_filename)) and ignore_duplicates is True:
+        print("Descriptor already exists and ignore_duplicates is True. Returning.")
+        return
+
     # Load the dataset
     f = gzip.open(dataset_path, 'rb')
     data = pickle.load(f)
     number_of_images = len(data['image_rgb'])
 
+    # Generate the descriptors
+    descriptor_list = []
     for i in tqdm(range(number_of_images)):
         # Every n images, print the memory usage
         if i % 1 == 0:
@@ -55,12 +75,6 @@ def generate_descriptors(
         "descriptors": descriptor_list,
         "settings": settings
     }
-
-    _, dataset_name = os.path.split(dataset_path)
-    # Define descriptor filename with timestamp at end
-    descriptor_filename = f"descriptor_{model_wrapper.NAME}_{time.strftime('%Y_%m_%d-%H_%M_%S')}_{dataset_name}"
-    if identifier is not None:
-        descriptor_filename = f"(id_{identifier})_{descriptor_filename}"
 
     store_data(descriptor_save_dict, datasets_dir=descriptor_dir, descriptor_name=descriptor_filename)
 
@@ -87,6 +101,10 @@ if __name__ == '__main__':
     arg.add_argument('--descriptor_dir', type=str, required=True)
     # Optional identifier
     arg.add_argument('--identifier', type=str, default=None, required=False)
+    # Disable timestamp
+    arg.add_argument('--disable_timestamp', type=str2bool, default=False, required=False)
+    # Ignore_duplicates
+    arg.add_argument('--ignore_duplicates', type=str2bool, default=False, required=False)
     known_args = arg.parse_known_args()[0]
 
     # Get the model wrapper
@@ -133,5 +151,7 @@ if __name__ == '__main__':
         dataset_path=args.pop('dataset_path', None),
         descriptor_dir=args.pop('descriptor_dir', None),
         identifier=args.pop('identifier', None),
+        disable_timestamp=args.pop('disable_timestamp', False),
+        ignore_duplicates=args.pop('ignore_duplicates', False),
         settings=args
     )
