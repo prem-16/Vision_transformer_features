@@ -52,7 +52,7 @@ class SDDINOWrapper(ModelWrapperBase):
         "stride": {
             # Totally dependent on chosen settings
             "type": "hidden",
-            "default": None
+            "default": "empty"
         },
         "facet": {
             # Totally dependent on chosen settings
@@ -175,7 +175,11 @@ class SDDINOWrapper(ModelWrapperBase):
             # However they can be overrided.
             stride = kwargs.get('stride', None)
             facet = kwargs.get('facet', None)
-            stride = stride if stride is not None else (14 if is_dino_v2 else 4)
+            stride = stride if (stride not in [None, 'empty']) else (14 if is_dino_v2 else 4)
+            if isinstance(stride, str):
+                stride = int(stride)
+            print("USING STRIDE: ", stride)
+
             facet = facet if facet is not None else ('token' if is_dino_v2 else 'key')
 
             extractor = ViTExtractor(model_type, stride, device=device)
