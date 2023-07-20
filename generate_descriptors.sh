@@ -16,17 +16,6 @@ output_dir=$2
 # Experiments file
 experiments_file=$3
 
-# If experiments file is experiments_open_clip.txt
-if [ "$experiments_file" = "experiments_open_clip.txt" ]; then
-    pip uninstall stable-diffusion-sdkit -y
-    pip install -r requirements_model_openclip.txt
-fi
-# If experiments file is experiments_sd_dino.txt
-if [ "$experiments_file" = "experiments_sd_dino.txt" ]; then
-    pip uninstall open-clip-torch -y
-    pip install -r requirements_model_sd_dino.txt
-fi
-
 # Activate conda environment and set PYTHONPATH
 source ~/anaconda3/etc/profile.d/conda.sh
 
