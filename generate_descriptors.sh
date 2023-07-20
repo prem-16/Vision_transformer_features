@@ -10,8 +10,25 @@
 # Example usage:
 # bash ./generate_descriptors.sh ./test_data ./descriptors
 
+# Dataset and output directory
 dataset_dir=$1
 output_dir=$2
+# Experiments file
+experiments_file=$3
+
+# If experiments file is experiments_open_clip.txt
+if [ "$experiments_file" = "experiments_open_clip.txt" ]; then
+    pip uninstall stable-diffusion-sdkit -y
+    pip install -r requirements_model_openclip.txt
+fi
+# If experiments file is experiments_sd_dino.txt
+if [ "$experiments_file" = "experiments_sd_dino.txt" ]; then
+    pip uninstall open-clip-torch -y
+    pip install -r requirements_model_sd_dino.txt
+fi
+
+# Activate conda environment and set PYTHONPATH
+source ~/anaconda3/etc/profile.d/conda.sh
 
 conda activate VTF
 export PYTHONPATH="${PYTHONPATH}:./"
@@ -22,5 +39,5 @@ for f in $dataset_dir/*.pkl.gzip; do
     while IFS= read -r line; do
         echo "$line"
         eval $line
-    done < experiments.txt
+    done < "$experiments_file"
 done

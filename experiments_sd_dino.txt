@@ -1,6 +1,6 @@
 # Install requirements for SD_DINO (uncomment)
-pip uninstall open-clip-torch
-pip install -r requirements_model_sd_dino.txt
+# pip uninstall open-clip-torch
+# pip install -r requirements_model_sd_dino.txt
 
 # Experiments 1_1 to 1_5:
 python src/dataset_collection/generate_descriptors.py --identifier 1_1 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino TRUE --only_dino TRUE --dino_v2 FALSE --load_size 518 --dataset_path $f --descriptor_dir $output_dir --combine_pca=FALSE --pca=TRUE --stride 4
@@ -8,11 +8,3 @@ python src/dataset_collection/generate_descriptors.py --identifier 1_2 --ignore_
 python src/dataset_collection/generate_descriptors.py --identifier 1_3 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 FALSE --load_size 518 --dataset_path $f --descriptor_dir $output_dir --combine_pca=FALSE --pca=TRUE --stride 4
 python src/dataset_collection/generate_descriptors.py --identifier 1_4 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino TRUE --only_dino FALSE --dino_v2 FALSE --load_size 518 --dataset_path $f --descriptor_dir $output_dir --combine_pca=FALSE --pca=TRUE --stride 4
 python src/dataset_collection/generate_descriptors.py --identifier 1_5 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino TRUE --only_dino FALSE --dino_v2 TRUE --load_size 518 --dataset_path $f --descriptor_dir $output_dir --combine_pca=FALSE --pca=TRUE --stride 14
-
-# # Install requirements for OpenCLIP (uncomment)
-pip uninstall stable-diffusion-sdkit
-pip install -r requirements_model_openclip.txt
-
-# Experiments 1_6 OpenCLIP:
-python src/dataset_collection/generate_descriptors.py --identifier 1_6 --disable_timestamp TRUE --model OPEN_CLIP --load_size 320 --dataset_path $f --descriptor_dir $output_dir
-python src/dataset_collection/generate_descriptors.py --identifier 1_7 --disable_timestamp TRUE --model OPEN_CLIP --load_size 518 --dataset_path $f --descriptor_dir $output_dir
