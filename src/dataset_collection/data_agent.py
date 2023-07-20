@@ -103,6 +103,17 @@ class DataAgent:
                                                        self.obs['extra']['tcp_pose'][6])
         self._cache['euler_angles'].append([roll, pitch, yaw])
 
+    def _clear_cache(self):
+        self._cache = {
+            "image_rgb": [],
+            "extrinsic": [],
+            "intrinsic": [],
+            "depth": [],
+            "name": [],
+            "pose": [],
+            "euler_angles": [],
+        }
+
     def store_cache(self, datasets_dir, data_name):
         if not os.path.exists(datasets_dir):
             os.mkdir(datasets_dir)
@@ -151,11 +162,11 @@ class DataAgent:
     def run_episode(self, dataset_dir, dataset_name, transformation_type="translation_X"):
         self.obs = self.env.reset(reconfigure=True)  # reset the environment
         self._init_action_dict()
-        opencv_viewer = OpenCVViewer(exit_on_esc=False)
+        #opencv_viewer = OpenCVViewer(exit_on_esc=False)
         for j in range(10):
             action = self.generate_EE_action("nothing")
             self.obs, _, self.done, self.info = self.env.step(action)
-            self.render_camera(opencv_viewer)
+            #self.render_camera(opencv_viewer)
         for i in tqdm(range(self.num_steps)):
             if transformation_type == "translation_X":
                 if i > self.num_steps / 3:
@@ -196,11 +207,12 @@ class DataAgent:
             else:
                 raise NotImplementedError(transformation_type)
             self.obs, _, self.done, self.info = self.env.step(action)
-            self.render_camera(opencv_viewer)
+            #self.render_camera(opencv_viewer)
             if i % 2 == 0:
                 self._save_cache()
         self.episode_count += 1
         self.store_cache(dataset_dir, dataset_name)
+        self._clear_cache()
 
     def render_camera(self, opencv_viewer):
         rendered_frame = self.env.render(mode='cameras')
