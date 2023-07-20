@@ -19,8 +19,7 @@ from src.dataset_collection.helpers import store_data
 from typing import List
 
 
-from data_agent import DataAgent
-from helpers import store_data
+from src.dataset_collection.data_agent import DataAgent
 MS1_ENV_IDS = [
     "OpenCabinetDoor-v1",
     "OpenCabinetDrawer-v1",
@@ -84,7 +83,7 @@ class DomainRandomizationPickCubeEnv(PickCubeEnv):
 
 @register_env("PickMultiYCBInReplicaCAD-v0", max_episode_steps=200, override=True)
 class PickMultiYCBInReplicaCAD(PickClutterEnv):
-    DEFAULT_EPISODE_JSON = "{ASSET_DIR}/pick_clutter/ycb_train_5k.json.gz"
+    DEFAULT_EPISODE_JSON = "src/dataset_collection/data/{ASSET_DIR}/pick_clutter/ycb_train_5k.json.gz"
 
     def _load_actors(self):
         self.objs: List[sapien.Actor] = []
@@ -113,7 +112,7 @@ class PickMultiYCBInReplicaCAD(PickClutterEnv):
         # Load static scene
         # -------------------------------------------------------------------------- #
         builder = self._scene.create_actor_builder()
-        path = f"{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
+        path = f"src/dataset_collection/data/{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
         pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         # NOTE: use nonconvex collision for static scene
         builder.add_nonconvex_collision_from_file(path, pose)
@@ -229,6 +228,7 @@ def transform_points3d(obs, image_points = [443,221]):
     return image_points_3d
 
 def main():
+    print(1)
     make_box_space_readable()
     np.set_printoptions(suppress=True, precision=3)
     args = parse_args()
@@ -236,7 +236,7 @@ def main():
     if args.env_id in MS1_ENV_IDS:
         if args.control_mode is not None and not args.control_mode.startswith("base"):
             args.control_mode = "base_pd_joint_vel_arm_" + args.control_mode
- 
+    """ 
     env: BaseEnv = gym.make( # default background (comment it out if you want to use custom background)
         args.env_id,
         obs_mode=args.obs_mode,
@@ -250,12 +250,12 @@ def main():
         #bg_name="minimal_bedroom", # optional background
         **args.env_kwargs
     )
-
+    """
 
 
     env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if you want to use default background)
-        "PickYCBInReplicaCAD-v0",
-        #"PickMultiYCBInReplicaCAD-v0",
+        #"PickYCBInReplicaCAD-v0",
+        "PickMultiYCBInReplicaCAD-v0",
         obs_mode=args.obs_mode,
 
         render_camera_cfgs=dict(width=640, height=480),
@@ -296,7 +296,7 @@ def main():
     num_episodes = 5
     for i in range(num_episodes):
         print("episode", i + 1)
-        data_agent.run_episode('./test_data', f'data_{transformation}', transformation)
+        data_agent.run_episode('./testing', f'data_{transformation}', transformation)
         env.reset(reconfigure=True)
         
     print("end of episodes")
