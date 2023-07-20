@@ -13,6 +13,7 @@
 dataset_dir=$1
 output_dir=$2
 
+conda activate VTF
 export PYTHONPATH="${PYTHONPATH}:./"
 
 for f in $dataset_dir/*.pkl.gzip; do

@@ -33,8 +33,9 @@ def generate_descriptors(
     print("Current path: %s" % (os.getcwd()))
     # Assert dataset path exists
     assert os.path.exists(dataset_path), "Dataset path does not exist."
-    # Assert descriptor path exists
-    assert os.path.exists(descriptor_dir), "Descriptor path does not exist."
+    # Create descriptor dir
+    if not os.path.exists(descriptor_dir):
+        os.makedirs(descriptor_dir, exist_ok=True)
 
     # Get descriptor_filename
     _, dataset_name = os.path.split(dataset_path)
