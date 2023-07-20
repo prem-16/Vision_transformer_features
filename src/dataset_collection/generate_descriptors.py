@@ -14,10 +14,12 @@ from src.models.model_wrapper_list import MODEL_DICT
 
 import time
 
+
 def generate_descriptors(
         model_wrapper: ModelWrapperBase = None,
         dataset_path=None,
         descriptor_dir=None,
+        identifier=None,
         settings=None
 ):
     """
@@ -54,24 +56,37 @@ def generate_descriptors(
         "settings": settings
     }
 
-    # Split the descriptor path into path and file name
-    descriptor_dir, descriptor_filename = os.path.split(descriptor_dir)
     _, dataset_name = os.path.split(dataset_path)
     # Define descriptor filename with timestamp at end
-    descriptor_filename = dataset_name.replace("data_",
-                                               f"descriptor_{model_wrapper.NAME}_{time.strftime('%Y_%m_%d-%H_%M_%S')}")
-    store_data(descriptor_save_dict, descriptor_dir, descriptor_name=descriptor_filename)
+    descriptor_filename = f"descriptor_{model_wrapper.NAME}_{time.strftime('%Y_%m_%d-%H_%M_%S')}_{dataset_name}"
+    if identifier is not None:
+        descriptor_filename = f"(id_{identifier})_{descriptor_filename}"
+
+    store_data(descriptor_save_dict, datasets_dir=descriptor_dir, descriptor_name=descriptor_filename)
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 if __name__ == '__main__':
     # Use argparse to get the arguments
     arg = argparse.ArgumentParser()
     # Model 
-    arg.add_argument('--model', type=str, default='DinoViT')
+    arg.add_argument('--model', type=str, required=True)
     # Data set path
-    arg.add_argument('--dataset_path', type=str, default='./test_data/data.pkl.gzip')
+    arg.add_argument('--dataset_path', type=str, required=True)
     # Descriptor save output path
-    arg.add_argument('--descriptor_dir', type=str, default='./test_data/descriptors')
+    arg.add_argument('--descriptor_dir', type=str, required=True)
+    # Optional identifier
+    arg.add_argument('--identifier', type=str, default=None, required=False)
     known_args = arg.parse_known_args()[0]
 
     # Get the model wrapper
@@ -83,12 +98,13 @@ if __name__ == '__main__':
     for setting_name, setting_content in model_wrapper_settings.items():
         # Derive the arg type
         tkinter_type = setting_content.get('type', None)
+
         if tkinter_type == 'slider':
             setting_type = int
         elif tkinter_type == 'dropdown':
             setting_type = str
         elif tkinter_type == 'toggle':
-            setting_type = bool
+            setting_type = str2bool
         elif tkinter_type == 'text':
             setting_type = str
         elif tkinter_type == 'hidden':
@@ -116,5 +132,6 @@ if __name__ == '__main__':
         model_wrapper=model_wrapper,
         dataset_path=args.pop('dataset_path', None),
         descriptor_dir=args.pop('descriptor_dir', None),
+        identifier=args.pop('identifier', None),
         settings=args
     )

@@ -1,0 +1,12 @@
+# Install requirements for SD_DINO (uncomment)
+# pip install -r requirements_model_sd_dino.txt
+
+# Experiments 1_1 to 1_5:
+python src/dataset_collection/generate_descriptors.py --identifier 1_1 --model SD_DINO --only_dino TRUE --fuse_dino TRUE --dino_v2 FALSE --load_size 224 --dataset_path $f --descriptor_dir $output_dir --combine_pca=FALSE --pca=TRUE
+# ...
+
+# Install requirements for OpenCLIP (uncomment)
+# pip install -r requirements_model_openclip.txt
+
+# Experiments 1_6 OpenCLIP:
+# ...
