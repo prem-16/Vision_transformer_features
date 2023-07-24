@@ -49,6 +49,10 @@ class SDDINOWrapper(ModelWrapperBase):
             "max": 1000,
             "default": 224
         },
+        "sd_load_size": {
+            "type": "hidden",
+            "default": 960
+        },
         "stride": {
             # Totally dependent on chosen settings
             "type": "hidden",
@@ -110,7 +114,7 @@ class SDDINOWrapper(ModelWrapperBase):
                 if settings['only_dino'] is False:
                     sd_model, sd_aug = load_model(
                         diffusion_ver=settings['ver'],
-                        image_size=settings['load_size'],
+                        image_size=settings['sd_load_size'],
                         num_timesteps=settings['t']
                     )
                     self._persistant_cache['sd_model'] = sd_model
@@ -194,8 +198,10 @@ class SDDINOWrapper(ModelWrapperBase):
 
             # Resize the image
             image = image.convert('RGB')
+            # Get the SD image
+            sd_image = image.resize((kwargs['sd_load_size'], kwargs['sd_load_size']), Image.BILINEAR)
             # Convert image size to square
-            image = image.resize((kwargs['load_size'], kwargs['load_size']), Image.BILINEAR)
+            dino_image = image.resize((kwargs['load_size'], kwargs['load_size']), Image.BILINEAR)
 
             with torch.no_grad():
                 # Stable Diffusion
@@ -204,7 +210,7 @@ class SDDINOWrapper(ModelWrapperBase):
                         # Don't use PCA
                         image_desc = process_features_and_mask(
                             self._persistant_cache['sd_model'], self._persistant_cache['sd_aug'],
-                            image, input_text=input_text, mask=False, pca=kwargs['pca']
+                            sd_image, input_text=input_text, mask=False, pca=kwargs['pca']
                         ).reshape(1, 1, -1, num_patches ** 2).permute(
                             0, 1, 3, 2
                         )
@@ -212,14 +218,14 @@ class SDDINOWrapper(ModelWrapperBase):
                         # Use PCA
                         features = process_features_and_mask(
                             self._persistant_cache['sd_model'], self._persistant_cache['sd_aug'],
-                            image, input_text=input_text, mask=False, raw=True
+                            sd_image, input_text=input_text, mask=False, raw=True
                         )
                         processed_features1 = co_pca_single_image(features, kwargs['pca_dims'])
                         image_desc = processed_features1.reshape(1, 1, -1, num_patches ** 2).permute(0, 1, 3, 2)
 
                 # DINO
                 if is_dino_fuse:
-                    image_batch = dino_extractor.preprocess_pil(image)
+                    image_batch = dino_extractor.preprocess_pil(dino_image)
                     image_desc_dino = dino_extractor.extract_descriptors(
                         image_batch.to(self._persistant_cache['device']), layer, facet
                     )
@@ -232,6 +238,7 @@ class SDDINOWrapper(ModelWrapperBase):
 
                 # If SD + DINO
                 if is_dino_fuse and not is_dino_only:
+                    print("FUSING", image_desc.shape, image_desc_dino.shape)
                     # Cat two features together
                     image_desc = torch.cat((image_desc, image_desc_dino), dim=-1)
 
@@ -241,7 +248,7 @@ class SDDINOWrapper(ModelWrapperBase):
 
             return image_desc.cpu(), {
                 "num_patches": dino_extractor.num_patches,
-                "load_size": (image.size[1], image.size[0])
+                "load_size": (dino_image.size[1], dino_image.size[0])
             }
 
     def _get_descriptor_similarity(self, image_dir_1, image_dir_2, settings=None):

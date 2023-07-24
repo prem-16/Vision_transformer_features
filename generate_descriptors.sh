@@ -19,5 +19,6 @@ experiments_file=$3
 export PYTHONPATH="${PYTHONPATH}:./"
 
 while IFS= read -r line; do
+    echo "$line"
     eval $line
 done < "$experiments_file"
