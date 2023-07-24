@@ -3,7 +3,7 @@ import pickle
 
 from src.models.model_wrapper_list import MODEL_DICT
 import numpy as np
-
+from src.models.dino_vit.correspondences import chunk_cosine_sim
 class ModelGUIManager:
     """
     A class to manage the models, their settings and further
@@ -77,7 +77,8 @@ class ModelGUIManager:
     def create_ground_truth_map(self, image1_points):
         image2_points = self._transform_points(image1_points)
         gt_map = np.zeros(self._image_data_2['image_rgb'].shape[:2])
-
+        image2_points[1] = min(int(image2_points[1]), gt_map.shape[0] -1)
+        image2_points[0] = min(int(image2_points[0]), gt_map.shape[1] -1)
         gt_map[int(image2_points[1])][int(image2_points[0])] = 1
         return gt_map
 
@@ -146,3 +147,36 @@ class ModelGUIManager:
         # Set cache
         self.selected_model._cache = cache
         self._settings = settings
+
+    @classmethod
+    def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2):
+        """
+        Build cache from the compute descriptor dump, this includes computing the similarities.
+        :param descriptor_dump_1:
+        :param descriptor_dump_2:
+        :return:
+        """
+
+        descriptors_1, other_info_1 = descriptor_dump_1
+        descriptors_2, other_info_2 = descriptor_dump_2
+
+        # Get the grid dim of patches
+        num_patches_1 = other_info_1['num_patches']
+        num_patches_2 = other_info_2['num_patches']
+
+        # calculate similarity between image1 and image2 descriptors
+        similarities = cls._compute_similarity(descriptors_1, descriptors_2)
+
+        return {
+            "descriptors_1": descriptors_1,
+            "descriptors_2": descriptors_2,
+            "similarities": similarities,
+            "num_patches_1": num_patches_1,
+            "num_patches_2": num_patches_2,
+        }
+
+    @staticmethod
+    def _compute_similarity(descriptors_1, descriptors_2):
+        return chunk_cosine_sim(descriptors_1, descriptors_2)
+
+

@@ -17,10 +17,10 @@ output_dir=$2
 experiments_file=$3
 
 # Activate conda environment and set PYTHONPATH
-source ~/anaconda3/etc/profile.d/conda.sh
+#source ~/miniconda3/etc/profile.d/conda.sh
 
-conda activate VTF
-export PYTHONPATH="${PYTHONPATH}:./"
+#conda activate PREM_VTF
+#export PYTHONPATH="${PYTHONPATH}:./"
 
 for f in $dataset_dir/*.pkl.gzip; do
     echo "Processing $f file..."
