@@ -70,7 +70,7 @@ class DinoVITWrapper(ModelWrapperBase):
                 preprocess = image_transform(
                     settings['load_size'], is_train=False, mean=None, std=None
                 )
-                print("Image Size ", model.visual.image_size)
+
                 self._persistant_cache['model'] = model
                 self._persistant_cache['preprocess'] = preprocess
 
@@ -109,8 +109,6 @@ class DinoVITWrapper(ModelWrapperBase):
         # image_feature is e.g. (1, desc_size, dim, dim)
         num_patches = (image_features.shape[-2], image_features.shape[-1])
         load_size = image.size
-
-        print("Image features shape:", image_features.shape)
 
         # image_features = image_features.flatten(0, 1)
         # flatten the spatial dimensions to (1, 1, desc_size, num_patches)

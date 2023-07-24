@@ -8,7 +8,7 @@
 # Below we apply this to every dataset.
 
 # Example usage:
-# bash ./generate_descriptors.sh ./test_data ./descriptors
+# bash ./generate_descriptors.sh ./test_data ./descriptors experiments_sd_dino.txt
 
 # Dataset and output directory
 dataset_dir=$1
@@ -16,17 +16,8 @@ output_dir=$2
 # Experiments file
 experiments_file=$3
 
-# Activate conda environment and set PYTHONPATH
-source ~/anaconda3/etc/profile.d/conda.sh
-
-conda activate VTF
 export PYTHONPATH="${PYTHONPATH}:./"
 
-for f in $dataset_dir/*.pkl.gzip; do
-    echo "Processing $f file..."
-    # Run each line in experiments.txt
-    while IFS= read -r line; do
-        echo "$line"
-        eval $line
-    done < "$experiments_file"
-done
+while IFS= read -r line; do
+    eval $line
+done < "$experiments_file"
