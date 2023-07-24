@@ -197,11 +197,11 @@ class SDDINOWrapper(ModelWrapperBase):
             input_text = kwargs.get('text_input', None)
 
             # Resize the image
-            image = image.convert('RGB')
-            # Get the SD image
-            sd_image = image.resize((kwargs['sd_load_size'], kwargs['sd_load_size']), Image.BILINEAR)
-            # Convert image size to square
-            dino_image = image.resize((kwargs['load_size'], kwargs['load_size']), Image.BILINEAR)
+            input_image = image.convert('RGB')
+            # Get the SD input image
+            sd_image = resize(input_image, kwargs['sd_load_size'], resize=True, to_pil=True, edge=kwargs['edge_pad'])
+            # Get the DINO input image
+            dino_image = resize(input_image, kwargs['load_size'], resize=True, to_pil=True, edge=kwargs['edge_pad'])
 
             with torch.no_grad():
                 # Stable Diffusion
