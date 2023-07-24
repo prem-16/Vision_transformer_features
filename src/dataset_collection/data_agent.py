@@ -108,7 +108,7 @@ class DataAgent:
             "extrinsic": [],
             "intrinsic": [],
             "depth": [],
-            "name": [],
+
             "pose": [],
             "euler_angles": [],
         }

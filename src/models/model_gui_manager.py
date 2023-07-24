@@ -19,6 +19,7 @@ class ModelGUIManager:
         self._image_dir_2 = None
         self._image_data_1 = None
         self._image_data_2 = None
+        self.super_cache = None
 
     @property
     def model_name(self):
@@ -117,7 +118,15 @@ class ModelGUIManager:
         vis, heatmap = self.selected_model.get_heatmap_vis(self._image_dir_2, point)
         return vis, heatmap
 
-    def build_cache_from_pkl_gzip(self, pkl_path, ref_index):
+    def build_super_cache(self,pkl_path):
+        # Load descriptors from pickle files
+        #   Extract gzip
+        f = gzip.open(pkl_path, 'rb')
+        #   Load pkl
+        pkl = pickle.load(f)
+        self.super_cache =pkl
+
+    def build_cache_from_pkl_gzip(self, pkl_path, ref_index ,point =None):
         """
         Build class and create cache from pkl gzip file.
 
@@ -125,12 +134,11 @@ class ModelGUIManager:
         :param desc_pkl_path_2:
         :return:
         """
+        if self.super_cache is None:
+            self.build_super_cache(pkl_path)
 
-        # Load descriptors from pickle files
-        #   Extract gzip
-        f = gzip.open(pkl_path, 'rb')
         #   Load pkl
-        pkl = pickle.load(f)
+        pkl = self.super_cache
 
         # Get the contents of the pkl
         if isinstance(pkl, dict):
@@ -142,14 +150,15 @@ class ModelGUIManager:
         else:
             raise ValueError("Incorrect type.")
         # Build cache
-        cache = self._build_similarity_cache_from_descriptor_dump(descriptors[0], descriptors[ref_index])
+        print(point)
+        cache = self._build_similarity_cache_from_descriptor_dump(descriptors[0], descriptors[ref_index] ,point=point)
 
         # Set cache
         self.selected_model._cache = cache
         self._settings = settings
 
     @classmethod
-    def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2):
+    def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2 , point = None):
         """
         Build cache from the compute descriptor dump, this includes computing the similarities.
         :param descriptor_dump_1:
@@ -163,9 +172,17 @@ class ModelGUIManager:
         # Get the grid dim of patches
         num_patches_1 = other_info_1['num_patches']
         num_patches_2 = other_info_2['num_patches']
-
+        print(
+            point
+        )
         # calculate similarity between image1 and image2 descriptors
-        similarities = cls._compute_similarity(descriptors_1, descriptors_2)
+        if point is None:
+            index = None
+        else:
+            index = cls._get_descriptor_index_from_point(
+                point, num_patches_1
+                )
+        similarities = cls._compute_similarity(descriptors_1, descriptors_2 ,index = index)
 
         return {
             "descriptors_1": descriptors_1,
@@ -176,7 +193,32 @@ class ModelGUIManager:
         }
 
     @staticmethod
-    def _compute_similarity(descriptors_1, descriptors_2):
-        return chunk_cosine_sim(descriptors_1, descriptors_2)
+    def _compute_similarity( descriptors_1, descriptors_2 ,index = None):
+        print(index)
+        if index is None:
+            return chunk_cosine_sim(descriptors_1, descriptors_2)
+        else:
+
+            return chunk_cosine_sim(descriptors_1, descriptors_2,index)
+
+
+    @staticmethod
+    def _get_descriptor_index_from_point(point, num_patches):
+        """
+        Converts a point in the image to a descriptor index.
+        :param point: The point in the image.
+        :param load_size: The size of the image.
+        :param num_patches: The number of patches in the image.
+        :return: The descriptor index.
+        """
+        point_x, point_y = point
+
+        # Turn image pixel point to descriptor map point
+        point_x = point_x * num_patches[1]
+        point_y = point_y * num_patches[0]
+
+        # Get the descriptor map point's index
+        point_index = int(point_y) * num_patches[1] + int(point_x)
+        return point_index
 
 

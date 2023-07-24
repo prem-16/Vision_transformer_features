@@ -300,7 +300,7 @@ def main():
     after_reset = True
     data_agent = DataAgent(env, args.env_id,args.control_mode, num_steps= 100)
 
-    transformations = ["translation_Y"]
+    transformations = ["translation_X"]
     num_episodes = 5
     for transformation in transformations:
         i=0
