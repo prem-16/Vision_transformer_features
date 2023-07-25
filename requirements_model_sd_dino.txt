@@ -29,6 +29,7 @@ torchaudio==2.0.2
 torchtext==0.6.0
 
 # For SD-DINO
+chardet
 loguru==0.7.0
 faiss-cpu==1.7.4
 gdown==4.7.1

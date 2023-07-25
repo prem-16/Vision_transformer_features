@@ -29,8 +29,6 @@ def generate_descriptors(
     """
 
     assert model_wrapper is not None, "Model wrapper is None."
-    # Print current path
-    print("Current path: %s" % (os.getcwd()))
     # Assert dataset path exists
     assert os.path.exists(dataset_path), "Dataset path does not exist."
     # Create descriptor dir
@@ -38,45 +36,62 @@ def generate_descriptors(
         os.makedirs(descriptor_dir, exist_ok=True)
 
     # Get descriptor_filename
-    _, dataset_name = os.path.split(dataset_path)
-    # Define descriptor filename with timestamp at end
-    descriptor_filename = f"descriptor_{model_wrapper.NAME}"
-    if identifier is not None:
-        descriptor_filename = f"(id_{identifier})_{descriptor_filename}"
-    if disable_timestamp is False:
-        descriptor_filename = f"{descriptor_filename}_{time.strftime('%Y_%m_%d-%H_%M_%S')}"
-    # Add the filename (with .pkl.gzip)
-    descriptor_filename += f"_{dataset_name}"
+    dataset_dir, dataset_name = os.path.split(dataset_path)
 
-    # If the descriptor already exists, and ignore_duplicates is True, then return
-    if os.path.exists(os.path.join(descriptor_dir, descriptor_filename)) and ignore_duplicates is True:
-        print("Descriptor already exists and ignore_duplicates is True. Returning.")
-        return
+    # If dataset_name is blank, i.e. {dataset_path}/ is provided.
+    if dataset_name == '':
+        # Get all the files in the directory
+        dataset_filenames = os.listdir(dataset_dir)
+        # Filter the files to only include .pkl.gzip files
+        dataset_filenames = [f for f in dataset_filenames if f.endswith('.pkl.gzip')]
+    else:
+        dataset_filenames = [dataset_name]
 
-    # Load the dataset
-    f = gzip.open(dataset_path, 'rb')
-    data = pickle.load(f)
-    number_of_images = len(data['image_rgb'])
+    # For each dataset file, generate the descriptors...
+    for dataset_name in tqdm(dataset_filenames):
+        # Get the (new) dataset path
+        dataset_path = os.path.join(dataset_dir, dataset_name)
+        # Define descriptor filename with timestamp at end
+        descriptor_filename = f"descriptor_{model_wrapper.NAME}"
+        if identifier is not None:
+            descriptor_filename = f"(id_{identifier})_{descriptor_filename}"
+        if disable_timestamp is False:
+            descriptor_filename = f"{descriptor_filename}_{time.strftime('%Y_%m_%d-%H_%M_%S')}"
+        # Add the filename (with .pkl.gzip)
+        descriptor_filename += f"_{dataset_name}"
 
-    # Generate the descriptors
-    descriptor_list = []
-    for i in tqdm(range(number_of_images)):
-        # Every n images, print the memory usage
-        if i % 1 == 0:
-            print("torch.cuda.memory_allocated: %fGB" % (torch.cuda.max_memory_allocated(0)/1024/1024/1024))
-        #   Compute the descriptor
-        img = np.array(data['image_rgb'][i])
-        descriptor = model_wrapper._compute_descriptors_from_numpy(img, **settings)
-        #   Append descriptor to list
-        descriptor_list.append(descriptor)
+        # If the descriptor already exists, and ignore_duplicates is True, then return
+        if os.path.exists(os.path.join(descriptor_dir, descriptor_filename)) and ignore_duplicates is True:
+            return
 
-    # Create the descriptor save dictionary
-    descriptor_save_dict = {
-        "descriptors": descriptor_list,
-        "settings": settings
-    }
+        # Load the dataset
+        f = gzip.open(dataset_path, 'rb')
+        data = pickle.load(f)
+        number_of_images = len(data['image_rgb'])
 
-    store_data(descriptor_save_dict, datasets_dir=descriptor_dir, descriptor_name=descriptor_filename)
+        # Generate the descriptors
+        descriptor_list = []
+        for i in tqdm(range(number_of_images)):
+            # np.random.seed(settings['seed'])
+            # torch.manual_seed(settings['seed'])
+            # torch.cuda.manual_seed(settings['seed'])
+            # torch.backends.cudnn.benchmark = True
+
+            #   Compute the descriptor
+            img = np.array(data['image_rgb'][i])
+            descriptor = model_wrapper._compute_descriptors_from_numpy(img, **settings)
+            #   Append descriptor to list
+            descriptor_list.append(descriptor)
+
+        # Create the descriptor save dictionary
+        descriptor_save_dict = {
+            "descriptors": descriptor_list,
+            "settings": settings
+        }
+
+        store_data(descriptor_save_dict, datasets_dir=descriptor_dir, descriptor_name=descriptor_filename)
+
+    print("Max torch cuda memory allocated: %fGB" % (torch.cuda.max_memory_allocated(0) / 1024 / 1024 / 1024))
 
 
 def str2bool(v):

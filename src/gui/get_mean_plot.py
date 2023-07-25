@@ -8,6 +8,7 @@ import argparse
 performance_path = "result"
 
 
+
 def average_error(model_configs="id_1_1", movement_type="translation_X"):
     x_list = []
     y_list = []
@@ -27,8 +28,6 @@ def average_error(model_configs="id_1_1", movement_type="translation_X"):
     """Average all episodes y and x values"""
     x_mean = np.mean(x_list, axis=0)
     y_mean = np.mean(y_list, axis=0)
-    print(len(y_mean))
-    print(len(x_mean))
     fig, ax = plt.subplots()
     ax.plot(x_mean, y_mean)
     plt.savefig(f"mean_{model_configs}_{movement_type}")
@@ -36,6 +35,7 @@ def average_error(model_configs="id_1_1", movement_type="translation_X"):
 
 def main(model_configs, movement_type):
     average_error(model_configs, movement_type)
+
 
 
 if __name__ == "__main__":
