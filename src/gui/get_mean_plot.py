@@ -5,8 +5,9 @@ import pickle
 import gzip
 import argparse
 
-
 performance_path = "result"
+
+
 
 def average_error(model_configs="id_1_1", movement_type="translation_X"):
     x_list = []
@@ -27,11 +28,15 @@ def average_error(model_configs="id_1_1", movement_type="translation_X"):
     """Average all episodes y and x values"""
     x_mean = np.mean(x_list, axis=0)
     y_mean = np.mean(y_list, axis=0)
-    plt.plot(x_mean, y_mean)
+    fig, ax = plt.subplots()
+    ax.plot(x_mean, y_mean)
     plt.savefig(f"mean_{model_configs}_{movement_type}")
+
 
 def main(model_configs, movement_type):
     average_error(model_configs, movement_type)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

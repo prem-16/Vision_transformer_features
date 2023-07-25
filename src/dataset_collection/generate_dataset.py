@@ -161,7 +161,7 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         # Load YCB objects 
         # It is the same as in PickSingleYCB-v0, just for illustration here
         builder = self._scene.create_actor_builder()
-        object_name =np.random.choice(["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "037_scissors" , "072-b_toy_airplane", "077_rubiks_cube"])
+        object_name =next(["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "037_scissors" , "072-b_toy_airplane", "077_rubiks_cube"])
         model_dir = ASSET_DIR / "mani_skill2_ycb/models" / object_name# change object here
         scale = self.cube_half_size / 0.01887479572529618
         collision_file = str(model_dir / "collision.obj")

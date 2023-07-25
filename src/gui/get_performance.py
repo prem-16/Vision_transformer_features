@@ -76,8 +76,13 @@ def get_performance(model_name, dataset_name,dataset_path ,descriptor_filename, 
         "rotation_Z": [],
     }
     model_manager.build_super_cache(pkl_path=descriptor_path)
+    # correspondance name for storing image
+    correspondance_name = descriptor_filename.replace(".pkl.gzip", "")
+    corr_dir = os.path.join(result_path, correspondance_name)
+    if not os.path.exists(corr_dir):
+        os.makedirs(corr_dir)
     # Iterate over remaining images of the sequence
-    for i, target_image in enumerate(dataset_data['image_rgb'][1:]):
+    for i, target_image in enumerate(dataset_data['image_rgb'][0:]):
         # Build the cache for the model
         # i.e. set the descriptors, and build the similarities
 
@@ -96,13 +101,15 @@ def get_performance(model_name, dataset_name,dataset_path ,descriptor_filename, 
         # Visualize correspondences and ground truth
         ground_truth_map = model_manager.create_ground_truth_map((r[0], r[1]))
         ground_truth_point = model_manager._transform_points((r[0], r[1]))
-        if i == 4:
-            plt.scatter(pred_index[0], pred_index[1], c='b', marker='x', label=model_manager.selected_model.NAME)
-            plt.title(f"Image Correspondence using {model_manager.selected_model.NAME}")
+        if i % 5 ==0:
+            plt.scatter(pred_index[0], pred_index[1], c='b', marker='x', label=model_manager.selected_model.NAME )
+            plt.title(f"Image Correspondence using {model_manager.selected_model.NAME} with  stride {model_manager._settings['stride']}")
             plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="ground truth")
             plt.legend()
+
             #plt.show()
-            plt.savefig(os.path.join(result_path, f"correspondence_{i}.png"))
+            plt.savefig(os.path.join(corr_dir, f"correspondence_{i}_{correspondance_name}.png"))
+            plt.close()
 
         model_manager._dirty = False
 
@@ -130,7 +137,7 @@ def get_performance(model_name, dataset_name,dataset_path ,descriptor_filename, 
 
     fig, ax = plt.subplots()
     ax.plot(translation_list, error_list)
-    plt.savefig(result_path+"result.png")
+    plt.savefig(result_path+f"result_{correspondance_name}.png")
     return list_of_errors , image1_point ,r
 
 if __name__ == '__main__':
