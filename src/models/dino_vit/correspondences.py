@@ -149,7 +149,9 @@ def draw_correspondences(points1: List[Tuple[float, float]], points2: List[Tuple
     return fig1, fig2
 
 
-def chunk_cosine_sim(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+
+
+def chunk_cosine_sim(x: torch.Tensor, y: torch.Tensor , x_indices = None) -> torch.Tensor:
     """ Computes cosine similarity between all possible pairs in two sets of vectors.
     Operates on chunks so no large amount of GPU RAM is required.
     :param x: an tensor of descriptors of shape Bx1x(t_x)xd' where d' is the dimensionality of the descriptors and t_x
@@ -159,9 +161,17 @@ def chunk_cosine_sim(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     :return: cosine similarity between all descriptors in x and all descriptors in y. Has shape of Bx1x(t_x)x(t_y) """
     result_list = []
     num_token_x = x.shape[2]
-    for token_idx in tqdm(range(num_token_x)):
-        token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
-        result_list.append(torch.nn.CosineSimilarity(dim=3)(token, y))  # Bx1xt
+    if x_indices == None:
+        for token_idx in tqdm(range(num_token_x)):
+            token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
+            result_list.append(torch.nn.CosineSimilarity(dim=3)(token, y))  # Bx1xt
+    else:
+        for token_idx in tqdm(range(num_token_x)):
+            if token_idx == x_indices:
+                token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
+                result_list.append(torch.nn.CosineSimilarity(dim=3)(token, y))  # Bx1xt
+            else:
+                result_list.append(torch.zeros(x.shape[0] ,1,num_token_x))  # Bx1xt
     return torch.stack(result_list, dim=2)  # Bx1x(t_x)x(t_y)
 
 

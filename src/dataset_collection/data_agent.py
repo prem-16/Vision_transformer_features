@@ -29,7 +29,6 @@ class DataAgent:
             "extrinsic": [],
             "intrinsic": [],
             "depth": [],
-            "name": [],
             "pose": [],
             "euler_angles": [],
         }
@@ -109,7 +108,7 @@ class DataAgent:
             "extrinsic": [],
             "intrinsic": [],
             "depth": [],
-            "name": [],
+
             "pose": [],
             "euler_angles": [],
         }
@@ -168,13 +167,13 @@ class DataAgent:
             self.obs, _, self.done, self.info = self.env.step(action)
             #self.render_camera(opencv_viewer)
         for i in tqdm(range(self.num_steps)):
-            if transformation_type == "translation_X":
+            if transformation_type == "translation_Y":
                 if i > self.num_steps / 3:
                     self._EE_ACTION = 1.5 * self._EE_ACTION
                     action = self.generate_EE_action("k")
                 else:
                     action = self.generate_EE_action("i")
-            elif transformation_type == "translation_Y":
+            elif transformation_type == "translation_X":
                 if i > self.num_steps / 3:
                     self._EE_ACTION = 2 * self._EE_ACTION
                     action = self.generate_EE_action("l")

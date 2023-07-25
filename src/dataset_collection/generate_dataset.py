@@ -262,8 +262,8 @@ def main():
 
 
     env = gym.make( # custom habitat2 background it overwrites the above env (comment it out if you want to use default background)
-        #"PickYCBInReplicaCAD-v0",
-        "PickMultiYCBInReplicaCAD-v0",
+        "PickYCBInReplicaCAD-v0",
+        #"PickMultiYCBInReplicaCAD-v0",
         obs_mode=args.obs_mode,
 
         render_camera_cfgs=dict(width=640, height=480),
@@ -300,12 +300,14 @@ def main():
     after_reset = True
     data_agent = DataAgent(env, args.env_id,args.control_mode, num_steps= 100)
 
-    transformation = "rotation_Z"
+    transformations = ["translation_X"]
     num_episodes = 5
-    for i in range(num_episodes):
-        print("episode", i + 1)
-        data_agent.run_episode('./testing', f'data_{transformation}', transformation)
-        env.reset(reconfigure=True)
+    for transformation in transformations:
+        i=0
+        for i in range(num_episodes):
+            print("episode", i + 1)
+            data_agent.run_episode('./test_data', f'data_{transformation}', transformation)
+            env.reset(reconfigure=True)
         
     print("end of episodes")
     # Viewer
