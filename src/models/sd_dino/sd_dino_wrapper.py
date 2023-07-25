@@ -223,12 +223,6 @@ class SDDINOWrapper(ModelWrapperBase):
                         )
                         image_desc_sd = co_pca_single_image(image_desc_sd, kwargs['pca_dims'])
 
-                    # Reshape the sd descriptors...
-                    # Important! Patches must match the number of patches in DINO
-                    assert image_desc_sd.shape[-1] == num_patches and image_desc_sd.shape[-2] == num_patches, \
-                        f"Unable to reshape SD descriptors shape of {image_desc_sd.shape} " \
-                        f"for num_patches {num_patches}."
-
                     # Reshape (1, descriptor_size, 60, 60) to (1, descriptor_size, num_patches, num_patches)
                     image_desc_sd = torch.nn.functional.interpolate(
                         image_desc_sd, (num_patches, num_patches), mode='bilinear'
@@ -254,10 +248,12 @@ class SDDINOWrapper(ModelWrapperBase):
                 if is_dino_fuse and not is_dino_only:
                     # Cat two features together
                     image_desc = torch.cat((image_desc_sd, image_desc_dino), dim=-1)
-
-                # If DINO only
-                if is_dino_only:
+                elif is_dino_only:
+                    # If DINO only
                     image_desc = image_desc_dino
+                else:
+                    # If SD only
+                    image_desc = image_desc_sd
 
             return image_desc.cpu(), {
                 "num_patches": dino_extractor.num_patches,
