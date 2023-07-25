@@ -3,15 +3,15 @@ from sd_dino.extractor_dino import ViTExtractor
 
 # # STRIDE = 14 if DINO_V2 else 4
 
-# # Patch size: 14
-# LOAD_SIZE = 512
-# STRIDE = 7
-# DINO_V2 = True
-
-# Patch size: 8
+# Patch size: 14
 LOAD_SIZE = 512
-STRIDE = 4
-DINO_V2 = False
+STRIDE = 1
+DINO_V2 = True
+
+# # Patch size: 8
+# LOAD_SIZE = 512
+# STRIDE = 4
+# DINO_V2 = False
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
