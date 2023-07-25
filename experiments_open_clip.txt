@@ -2,6 +2,6 @@
 # pip uninstall stable-diffusion-sdkit
 # pip install -r requirements_model_openclip.txt
 
-# Experiments 1_6 OpenCLIP:
+# Experiments: OpenCLIP
+python src/dataset_collection/generate_descriptors.py --identifier 1_7 --disable_timestamp TRUE --model OPEN_CLIP --load_size 448 --dataset_path $dataset_dir --descriptor_dir $output_dir
 python src/dataset_collection/generate_descriptors.py --identifier 1_6 --disable_timestamp TRUE --model OPEN_CLIP --load_size 320 --dataset_path $dataset_dir --descriptor_dir $output_dir
-python src/dataset_collection/generate_descriptors.py --identifier 1_7 --disable_timestamp TRUE --model OPEN_CLIP --load_size 518 --dataset_path $dataset_dir --descriptor_dir $output_dir
