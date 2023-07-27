@@ -1,6 +1,8 @@
 import gzip
 import pickle
 
+import torch
+
 from src.models.model_wrapper_list import MODEL_DICT
 import numpy as np
 from src.models.dino_vit.correspondences import chunk_cosine_sim
@@ -118,24 +120,83 @@ class ModelGUIManager:
         vis, heatmap = self.selected_model.get_heatmap_vis(self._image_dir_2, point)
         return vis, heatmap
 
-    def build_super_cache(self,pkl_path):
-        # Load descriptors from pickle files
-        #   Extract gzip
-        f = gzip.open(pkl_path, 'rb')
-        #   Load pkl
-        pkl = pickle.load(f)
-        self.super_cache =pkl
+    def build_super_cache(self, pkl_paths):
+        if isinstance(pkl_paths, str):
+            pkl_paths = [pkl_paths]
+        assert isinstance(pkl_paths, list), "pkl_path must be a list of paths."
 
-    def build_cache_from_pkl_gzip(self, pkl_path, ref_index ,point =None):
+        cache_contents = None
+        for pkl_path in pkl_paths:
+            # Load descriptors from pickle files
+            #   Extract gzip
+            f = gzip.open(pkl_path, 'rb')
+            #   Load pkl
+            pkl = pickle.load(f)
+
+            if cache_contents is None:
+                cache_contents = pkl
+            else:
+                # For all descriptors in the pkl
+                # Reshape them back to the original shape
+                # Then resize back, reshape and concat them to the existing descriptors
+                num_patches_config_1 = cache_contents['descriptors'][0][1]['num_patches'][0]
+                num_patches_config_2 = pkl['descriptors'][0][1]['num_patches'][0]
+
+                descriptor_orig_shape_config_1 = cache_contents['descriptors'][0][0].shape
+                descriptor_orig_shape_config_2 = pkl['descriptors'][0][0].shape
+
+                descriptor_spatial_shape_config_1 = (
+                    descriptor_orig_shape_config_1[0],
+                    descriptor_orig_shape_config_1[1],
+                    num_patches_config_1,
+                    num_patches_config_1,
+                    descriptor_orig_shape_config_1[-1]
+                )
+
+                descriptor_spatial_shape_config_2 = (
+                    descriptor_orig_shape_config_2[0],
+                    descriptor_orig_shape_config_2[1],
+                    num_patches_config_2,
+                    num_patches_config_2,
+                    descriptor_orig_shape_config_2[-1]
+                )
+
+                combined_new_shape = (
+                    descriptor_orig_shape_config_1[0],
+                    descriptor_orig_shape_config_1[1],
+                    descriptor_orig_shape_config_1[2],
+                    descriptor_orig_shape_config_1[3] + descriptor_orig_shape_config_2[3],
+                )
+
+                # For each descriptor...
+                for i in range(len(pkl['descriptors'])):
+                    # Concatenate the descriptors on the descriptor axis
+                    # And reshape to combined_new_shape
+                    cache_contents['descriptors'][i] = np.concatenate(
+                        (
+                            # Reshape base descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
+                            cache_contents['descriptors'][i].reshape(descriptor_spatial_shape_config_1),
+                            # Resize additional descriptor to spatial shape of base descriptor
+                            torch.nn.functional.interpolate(
+                                # Reshape additional descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
+                                pkl['descriptors'][i].reshape(descriptor_spatial_shape_config_2),
+                                (num_patches_config_1, num_patches_config_1), mode='bilinear'
+                            )
+                        ),
+                        axis=-1
+                    ).reshape(combined_new_shape)
+
+        self.super_cache = cache_contents
+
+    def build_cache_from_pkl_gzip(self, pkl_paths, ref_index, point=None):
         """
         Build class and create cache from pkl gzip file.
 
         :param desc_pkl_path_1:
-        :param desc_pkl_path_2:
         :return:
         """
         if self.super_cache is None:
-            self.build_super_cache(pkl_path)
+            self.build_super_cache(pkl_paths)
 
         #   Load pkl
         pkl = self.super_cache
@@ -151,14 +212,14 @@ class ModelGUIManager:
             raise ValueError("Incorrect type.")
         # Build cache
         print(point)
-        cache = self._build_similarity_cache_from_descriptor_dump(descriptors[0], descriptors[ref_index] ,point=point)
+        cache = self._build_similarity_cache_from_descriptor_dump(descriptors[0], descriptors[ref_index], point=point)
 
         # Set cache
         self.selected_model._cache = cache
         self._settings = settings
 
     @classmethod
-    def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2 , point = None):
+    def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2, point=None):
         """
         Build cache from the compute descriptor dump, this includes computing the similarities.
         :param descriptor_dump_1:

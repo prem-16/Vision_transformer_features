@@ -6,6 +6,7 @@ import pickle
 import torch
 from tqdm import tqdm
 
+from src.dataset_collection.dataset_object_labels import dataset_object_labels
 from src.dataset_collection.helpers import store_data
 import numpy as np
 
@@ -22,6 +23,7 @@ def generate_descriptors(
         identifier=None,
         disable_timestamp=False,
         ignore_duplicates=False,
+        allow_text_captions=False,
         settings=None
 ):
     """
@@ -64,6 +66,17 @@ def generate_descriptors(
         if os.path.exists(os.path.join(descriptor_dir, descriptor_filename)) and ignore_duplicates is True:
             return
 
+        # Get the episode number
+        # If dataset_name contains "episode_", then get the following number
+        if "episode_" in dataset_name:
+            # Get the episode number
+            episode_number = int(dataset_name.split("episode_")[1].split(".pkl.gzip")[0])
+            # Get the object name from the episode
+            object_name = dataset_object_labels[str(episode_number % len(dataset_object_labels))]
+            # If allow_text_captions is True, then add the object name as a caption
+            if allow_text_captions:
+                settings['text_input'] = object_name
+
         # Load the dataset
         f = gzip.open(dataset_path, 'rb')
         data = pickle.load(f)
@@ -72,11 +85,6 @@ def generate_descriptors(
         # Generate the descriptors
         descriptor_list = []
         for i in tqdm(range(number_of_images)):
-            # np.random.seed(settings['seed'])
-            # torch.manual_seed(settings['seed'])
-            # torch.cuda.manual_seed(settings['seed'])
-            # torch.backends.cudnn.benchmark = True
-
             #   Compute the descriptor
             img = np.array(data['image_rgb'][i])
             descriptor = model_wrapper._compute_descriptors_from_numpy(img, **settings)
@@ -120,6 +128,8 @@ if __name__ == '__main__':
     arg.add_argument('--disable_timestamp', type=str2bool, default=False, required=False)
     # Ignore_duplicates
     arg.add_argument('--ignore_duplicates', type=str2bool, default=False, required=False)
+    # Dataset text captions
+    arg.add_argument('--allow_text_captions', type=str2bool, default=False, required=False)
     known_args = arg.parse_known_args()[0]
 
     # Get the model wrapper
@@ -168,5 +178,6 @@ if __name__ == '__main__':
         identifier=args.pop('identifier', None),
         disable_timestamp=args.pop('disable_timestamp', False),
         ignore_duplicates=args.pop('ignore_duplicates', False),
+        allow_text_captions=args.pop('allow_text_captions', False),
         settings=args
     )
