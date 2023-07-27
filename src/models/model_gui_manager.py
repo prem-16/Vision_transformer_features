@@ -80,8 +80,8 @@ class ModelGUIManager:
     def create_ground_truth_map(self, image1_points):
         image2_points = self._transform_points(image1_points)
         gt_map = np.zeros(self._image_data_2['image_rgb'].shape[:2])
-        image2_points[1] = min(int(image2_points[1]), gt_map.shape[0] -1)
-        image2_points[0] = min(int(image2_points[0]), gt_map.shape[1] -1)
+        image2_points[1] = max(min(int(image2_points[1]), gt_map.shape[0] -1) ,0)
+        image2_points[0] =max(min(int(image2_points[0]), gt_map.shape[1] -1) , 0)
         gt_map[int(image2_points[1])][int(image2_points[0])] = 1
         return gt_map
 

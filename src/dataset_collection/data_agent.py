@@ -113,10 +113,10 @@ class DataAgent:
             "euler_angles": [],
         }
 
-    def store_cache(self, datasets_dir, data_name):
+    def store_cache(self, datasets_dir, data_name , episode):
         if not os.path.exists(datasets_dir):
             os.mkdir(datasets_dir)
-        data_name = f"{data_name}_episode_{self.episode_count}.pkl.gzip"
+        data_name = f"{data_name}_episode_{episode}.pkl.gzip"
         data_file = os.path.join(datasets_dir, data_name)
         f = gzip.open(data_file, 'wb')
         pickle.dump(self._cache, f)
@@ -158,11 +158,11 @@ class DataAgent:
         action = env.agent.controller.from_action_dict(action_dict)
         return action
 
-    def run_episode(self, dataset_dir, dataset_name, transformation_type="translation_X"):
+    def run_episode(self, dataset_dir, dataset_name, transformation_type="translation_X" , episode_num =1):
         self.obs = self.env.reset(reconfigure=True)  # reset the environment
         self._init_action_dict()
         #opencv_viewer = OpenCVViewer(exit_on_esc=False)
-        for j in range(10):
+        for j in range(25):
             action = self.generate_EE_action("nothing")
             self.obs, _, self.done, self.info = self.env.step(action)
             #self.render_camera(opencv_viewer)
@@ -210,7 +210,7 @@ class DataAgent:
             if i % 2 == 0:
                 self._save_cache()
         self.episode_count += 1
-        self.store_cache(dataset_dir, dataset_name)
+        self.store_cache(dataset_dir, dataset_name,episode_num)
         self._clear_cache()
 
     def render_camera(self, opencv_viewer):

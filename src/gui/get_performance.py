@@ -95,7 +95,6 @@ def get_performance(
             plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="ground truth")
             plt.legend()
 
-            # plt.show()
             plt.savefig(os.path.join(corr_dir, f"correspondence_{i}_{correspondance_name}.png"))
             plt.close()
 

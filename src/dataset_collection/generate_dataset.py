@@ -120,8 +120,10 @@ class PickMultiYCBInReplicaCAD(PickClutterEnv):
         # Load static scene
         # -------------------------------------------------------------------------- #
         builder = self._scene.create_actor_builder()
-        path = f"src/dataset_collection/data/{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
-        pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
+        #path = f"src/dataset_collection/data/{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
+        path = f"src/dataset_collection/data/{ASSET_DIR}/hab2_bench_assets/stages/van-gogh-room.glb"
+        pose = sapien.Pose(q=[0.5, 0, 0, 0])  # van gogh pose
+        # pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
         # NOTE: use nonconvex collision for static scene
         builder.add_nonconvex_collision_from_file(path, pose)
         builder.add_visual_from_file(path, pose)
@@ -132,12 +134,14 @@ class PickMultiYCBInReplicaCAD(PickClutterEnv):
         # offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
         # offset = np.array([2.3, 1.4, 0.5]) # stairs
         # offset = np.array([-1.5, -1, 0.3]) # carpet
-        offset = np.array([-1.5, -1, 0.3])  # carpet
+        #offset = np.array([-1.5, -1, 0.3])  # carpet
         # offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera)
         # offset = np.array([1.3, 3.7, 0.5]) # dark room
         # offset = np.array([4.2, 0.5, 0.8]) # bicycle
         # offset = np.array([4.1, -5.3, 0.9]) # corner of a sofa
         # offset = np.array([2.5, -5, 0.9]) # carpet
+        offset = np.array([0.8, -1, 1.3])  # van gogh
+
         self.arena.set_pose(sapien.Pose(-offset))
 
     def initialize_episode(self):
@@ -157,11 +161,12 @@ class PickMultiYCBInReplicaCAD(PickClutterEnv):
 
 @register_env("PickYCBInReplicaCAD-v0", max_episode_steps=200, override=True)
 class PickYCBInReplicaCAD(PickCubeEnv):
+    object_iter = iter(["017_orange", "017_orange", "024_bowl", "011_banana", "037_scissors", "035_power_drill"])
     def _load_actors(self):
         # Load YCB objects 
         # It is the same as in PickSingleYCB-v0, just for illustration here
         builder = self._scene.create_actor_builder()
-        object_name =next(["025_mug", "017_orange","024_bowl" ,"011_banana" , "004_sugar_box", "037_scissors" , "072-b_toy_airplane", "077_rubiks_cube"])
+        object_name = next(self.object_iter)
         model_dir = ASSET_DIR / "mani_skill2_ycb/models" / object_name# change object here
         scale = self.cube_half_size / 0.01887479572529618
         collision_file = str(model_dir / "collision.obj")
@@ -179,8 +184,11 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         # Load static scene
         # -------------------------------------------------------------------------- #
         builder = self._scene.create_actor_builder()
-        path = f"{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
-        pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
+        #path = f"{ASSET_DIR}/hab2_bench_assets/stages/Baked_sc1_staging_00.glb"
+        path = f"{ASSET_DIR}/hab2_bench_assets/stages/van-gogh-room.glb"
+
+        #pose = sapien.Pose(q=[0.707, 0.707, 0, 0])  # y-axis up for Habitat scenes
+        pose = sapien.Pose(q=[0.5, 0, 0, 0])  # van gogh pose
         # NOTE: use nonconvex collision for static scene
         builder.add_nonconvex_collision_from_file(path, pose)
         builder.add_visual_from_file(path, pose)
@@ -191,12 +199,13 @@ class PickYCBInReplicaCAD(PickCubeEnv):
         #offset = np.array([0.5, -0.2, 0.5]) # xyz z for height 0.5, 0, 0.5 or 0.7, 0, 0.5 couch
         #offset = np.array([2.3, 1.4, 0.5]) # stairs
         #offset = np.array([-1.5, -1, 0.3]) # carpet
-        offset =  np.array([-1.5, -1, 0.1]) # carpet
+        #offset =  np.array([-1.5, -1, 0.1]) # carpet
         #offset = np.array([2.5, -6.5, 0.9]) # shelf (need to rotate camera) 
         #offset = np.array([1.3, 3.7, 0.5]) # dark room
         #offset = np.array([4.2, 0.5, 0.8]) # bicycle
         #offset = np.array([4.1, -5.3, 0.9]) # corner of a sofa 
         #offset = np.array([2.5, -5, 0.9]) # carpet
+        offset = np.array([0.8, -1, 1.1])  # van gogh
         self.arena.set_pose(sapien.Pose(-offset))
 
     def initialize_episode(self):
@@ -300,14 +309,14 @@ def main():
     after_reset = True
     data_agent = DataAgent(env, args.env_id,args.control_mode, num_steps= 100)
 
-    transformations = ["translation_X"]
-    num_episodes = 5
+    transformations = ["rotation_Z"]
+    num_episodes = 10
     for transformation in transformations:
-        i=0
-        for i in range(num_episodes):
+        start_episode = 5
+        for i in range(start_episode, num_episodes):
             print("episode", i + 1)
-            data_agent.run_episode('./test_data', f'data_{transformation}', transformation)
-            env.reset(reconfigure=True)
+            data_agent.run_episode('./test_data', f'data_{transformation}', transformation, episode_num= i+1 )
+
         
     print("end of episodes")
     # Viewer
@@ -315,50 +324,6 @@ def main():
 
         
 
-
-
-
-
-        # # -------------------------------------------------------------------------- #
-        # # Post-process action
-        # # -------------------------------------------------------------------------- #
-        # if args.env_id in MS1_ENV_IDS:
-        #     action_dict = dict(
-        #         base=base_action,
-        #         right_arm=ee_action,
-        #         right_gripper=gripper_action,
-        #         left_arm=np.zeros_like(ee_action),
-        #         left_gripper=np.zeros_like(gripper_action),
-        #     )
-        #     action = env.agent.controller.from_action_dict(action_dict)
-        # else:
-        #     action_dict = dict(base=base_action, arm=ee_action, gripper=gripper_action)
-        #     action = env.agent.controller.from_action_dict(action_dict)
-        #
-        # obs, reward, done, info = env.step(action)
-        # if key == "g":
-        #     go_to_pose(env, pose)
-        # if key == "8":
-        #     counter +=1
-        #     img_array = obs['image']['hand_camera']['rgb']
-        #     samples['intrinsic'].append(obs['camera_param']['hand_camera']['intrinsic_cv'])
-        #     samples['extrinsic'].append(obs['camera_param']['hand_camera']['extrinsic_cv'])
-        #     samples['image_rgb'].append(img_array)
-        #     samples['depth'].append(obs['image']['hand_camera']['depth'])
-        #     samples['name'].append(f"test_{counter:02}.png")
-        #     samples['pose'].append(obs['extra']['tcp_pose'][0:3])
-        #     roll, pitch, yaw = euler_from_quaternion(obs['extra']['tcp_pose'][3], obs['extra']['tcp_pose'][4],
-        #                                              obs['extra']['tcp_pose'][5], obs['extra']['tcp_pose'][6])
-        #     samples['euler_angles'].append([roll, pitch, yaw])
-        #     print("image data recorded", samples['name'][-1])
-        #
-        # if key == "s":
-        #     store_data(samples, "./test_data")
-        #     print("data stored")
-        # roll, pitch, yaw = euler_from_quaternion(obs['extra']['tcp_pose'][3], obs['extra']['tcp_pose'][4],
-        #                                              obs['extra']['tcp_pose'][5], obs['extra']['tcp_pose'][6])
-        # print("roll, pitch, yaw", roll, pitch, yaw)
-        # print("tcp_pose", obs['extra']['tcp_pose'][0:3])
 
 def go_to_pose(env, pose):
     action = np.zeros(6)

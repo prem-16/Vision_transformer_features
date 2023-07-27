@@ -163,3 +163,7 @@ cython_debug/
 #.idea/
 /test_data/
 /descriptors/*
+/test_data_backup/
+
+
+/data/
