@@ -70,7 +70,7 @@ def generate_descriptors(
         # If dataset_name contains "episode_", then get the following number
         if "episode_" in dataset_name:
             # Get the episode number
-            episode_number = int(dataset_name.split("episode_")[1].split(".pkl.gzip")[0])
+            episode_number = int(dataset_name.split("episode_")[1].split(".pkl.gzip")[0]) - 1
             # Get the object name from the episode
             object_name = dataset_object_labels[str(episode_number % len(dataset_object_labels))]
             # If allow_text_captions is True, then add the object name as a caption

@@ -1,7 +1,7 @@
 dataset_object_labels = {
-    "1": "orange",
-    "2": "bowl",
-    "3": "banana",
-    "4": "scissors",
-    "5": "power drill",
+    "0": "orange",
+    "1": "bowl",
+    "2": "banana",
+    "3": "scissors",
+    "4": "power drill",
 }
