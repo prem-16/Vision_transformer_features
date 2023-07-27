@@ -132,7 +132,8 @@ class ModelGUIManager:
             f = gzip.open(pkl_path, 'rb')
             #   Load pkl
             pkl = pickle.load(f)
-
+            assert pkl is not None, "pkl file not loaded"
+            print(len(pkl['descriptors'][0][0]))
             if cache_contents is None:
                 cache_contents = pkl
             else:
@@ -140,10 +141,11 @@ class ModelGUIManager:
                 # Reshape them back to the original shape
                 # Then resize back, reshape and concat them to the existing descriptors
                 num_patches_config_1 = cache_contents['descriptors'][0][1]['num_patches'][0]
-                num_patches_config_2 = pkl['descriptors'][0][1]['num_patches'][0]
+                #assert np.sqrt(pkl['descriptors'][0][0].shape[2]) % 10 == 0, "Not square."
+                num_patches_config_2 = int(np.sqrt(pkl['descriptors'][0][0].shape[2]))
 
-                descriptor_orig_shape_config_1 = cache_contents['descriptors'][0][0].shape
-                descriptor_orig_shape_config_2 = pkl['descriptors'][0][0].shape
+                descriptor_orig_shape_config_1 = list(cache_contents['descriptors'][0][0].shape)
+                descriptor_orig_shape_config_2 = list(pkl['descriptors'][0][0].shape)
 
                 descriptor_spatial_shape_config_1 = (
                     descriptor_orig_shape_config_1[0],
@@ -161,30 +163,49 @@ class ModelGUIManager:
                     descriptor_orig_shape_config_2[-1]
                 )
 
+                new_descriptor_spatial_shape_config_2 = (
+                    descriptor_orig_shape_config_2[0],
+                    descriptor_orig_shape_config_2[1],
+                    num_patches_config_1,
+                    num_patches_config_1,
+                    descriptor_orig_shape_config_2[-1]
+                )
+
                 combined_new_shape = (
                     descriptor_orig_shape_config_1[0],
                     descriptor_orig_shape_config_1[1],
                     descriptor_orig_shape_config_1[2],
                     descriptor_orig_shape_config_1[3] + descriptor_orig_shape_config_2[3],
                 )
-
+                print("descriptor_spatial_shape_config_1", descriptor_spatial_shape_config_1)
+                print("descriptor_spatial_shape_config_2", descriptor_spatial_shape_config_2)
+                print("combined_new_shape", combined_new_shape)
+                print("num_patches_config_1", num_patches_config_1)
+                print("num_patches_config_2", num_patches_config_2)
+                print("descriptor_orig_shape_config_1", descriptor_orig_shape_config_1)
+                print("descriptor_orig_shape_config_2", descriptor_orig_shape_config_2)
                 # For each descriptor...
                 for i in range(len(pkl['descriptors'])):
                     # Concatenate the descriptors on the descriptor axis
                     # And reshape to combined_new_shape
-                    cache_contents['descriptors'][i] = np.concatenate(
+                    temp = list(cache_contents['descriptors'][i])
+
+                    temp[0] = torch.concatenate(
                         (
                             # Reshape base descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
-                            cache_contents['descriptors'][i].reshape(descriptor_spatial_shape_config_1),
+                            cache_contents['descriptors'][i][0].reshape(descriptor_spatial_shape_config_1),
                             # Resize additional descriptor to spatial shape of base descriptor
                             torch.nn.functional.interpolate(
                                 # Reshape additional descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
-                                pkl['descriptors'][i].reshape(descriptor_spatial_shape_config_2),
+                                pkl['descriptors'][i][0].reshape(descriptor_spatial_shape_config_2)[0].permute(0, 3, 1, 2),
                                 (num_patches_config_1, num_patches_config_1), mode='bilinear'
-                            )
+                            ).permute(0, 2, 3, 1).reshape(new_descriptor_spatial_shape_config_2)
                         ),
                         axis=-1
                     ).reshape(combined_new_shape)
+                    cache_contents['descriptors'][i] = tuple(temp)
+
+
 
         self.super_cache = cache_contents
 

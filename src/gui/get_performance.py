@@ -166,19 +166,19 @@ if __name__ == '__main__':
     # of other descriptors...
     # Be careful!! The first descriptor config id defines the overall concatenated descriptor load_size!
     configs = {
-        "(id_1_1)": {"model_name": "SD_DINO"},
-        "(id_1_2)": {"model_name": "SD_DINO"},
-        "(id_1_3_2)": {"model_name": "SD_DINO"},
-        "(id_1_4)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"]
-        },
+        #"(id_1_1)": {"model_name": "SD_DINO"},
+        #"(id_1_2)": {"model_name": "SD_DINO"},
+        #"(id_1_3_2)": {"model_name": "SD_DINO"},
+        # "(id_1_4)": {
+        #     "model_name": "SD_DINO",
+        #     "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"]
+        # },
         "(id_1_5)": {
             "model_name": "SD_DINO",
             "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"]
         },
-        "(id_1_6)": {"model_name": "OPEN_CLIP"},
-        "(id_1_7)": {"model_name": "OPEN_CLIP"}
+       # "(id_1_6)": {"model_name": "OPEN_CLIP"},
+       # "(id_1_7)": {"model_name": "OPEN_CLIP"}
     }
     # Parse the arguments
     args = vars(arg.parse_args())
@@ -198,7 +198,7 @@ if __name__ == '__main__':
         # For each configuration i.e. specific model and settings
         for config_id, config in configs.items():
             print("Generating for config ", config_id, " ", config, " ", transformation)
-            for episode_id in range(0, 11):
+            for episode_id in range(1, 11):
                 # Get the dataset file name
                 dataset_file = f"data_{transformation}_episode_{episode_id}.pkl.gzip"
                 # Get the descriptor file name(s)
@@ -222,14 +222,14 @@ if __name__ == '__main__':
                     dataset_path=known_args.dataset_path,
                     translation_type=transformation,
                     result_path=known_args.result_path,
-                    image1_point=image_points[0][episode_id],
-                    region=image_points[1][episode_id],
+                    image1_point=image_points[0][episode_id-1],
+                    region=image_points[1][episode_id-1],
                     descriptor_filenames=descriptor_filenames,
                     descriptor_paths=descriptor_paths,
                     output_filename=output_filename
                 )
-                image_points[0][episode_id] = image_point
-                image_points[1][episode_id] = r
+                image_points[0][episode_id-1] = image_point
+                image_points[1][episode_id-1] = r
                 error_list.append(error)
 
     store_data(image_points, "./result", "key_points.pkl.gzip")
