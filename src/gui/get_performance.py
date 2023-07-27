@@ -12,6 +12,8 @@ import torch
 image_directory = "images/test_images"
 #image_files, image_dirs = get_image_list(image_directory)
 import os
+import gzip
+import pickle
 # = image_data["image_rgb"]
 
 
@@ -19,20 +21,6 @@ def get_error(point1, point2):
     return np.sqrt(np.sum(np.square(point1 - point2)))
 def get_error_heatmap(heatmap1, heatmap2):
     return np.sqrt(np.average(np.square(heatmap1 - heatmap2)))
-load_size = 224
-
-
-
-
-# model_manager.update_model("DinoViT")
-# model_manager.apply_setting("stride", 8)
-# model_manager.apply_setting("load_size", load_size)
-# model_manager.apply_setting("layer", 11)
-# model_manager.apply_setting("facet", "key")
-# model_manager.apply_setting("threshold", 0.05)
-# model_manager.apply_setting("model_type", "dino_vits8")
-# model_manager.apply_setting("log_bin", 0)
-
 
 # model_manager._image_data_1 = {key: value[0] for key, value in image_data.items()}
 def get_performance(model_name, dataset_name,dataset_path ,descriptor_filename, translation_type : str,descriptor_dir, result_path , image1_point = None ,region =None):
@@ -103,7 +91,7 @@ def get_performance(model_name, dataset_name,dataset_path ,descriptor_filename, 
         ground_truth_point = model_manager._transform_points((r[0], r[1]))
         if i % 5 ==0:
             plt.scatter(pred_index[0], pred_index[1], c='b', marker='x', label=model_manager.selected_model.NAME )
-            plt.title(f"Image Correspondence using {model_manager.selected_model.NAME} with  stride {model_manager._settings['stride']}")
+            plt.title(f"Image Correspondence")
             plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="ground truth")
             plt.legend()
 
@@ -116,8 +104,11 @@ def get_performance(model_name, dataset_name,dataset_path ,descriptor_filename, 
         transformation["translation_X"] = model_manager._image_data_2["pose"][0] - model_manager._image_data_1["pose"][0]
         transformation["translation_Y"]= model_manager._image_data_2["pose"][1] - model_manager._image_data_1["pose"][1]
         transformation["translation_Z"]= model_manager._image_data_2["pose"][2] - model_manager._image_data_1["pose"][2]
-        transformation["rotation_X"], transformation["rotation_Y"],transformation["rotation_Z"] = [a -b for a , b in zip(model_manager._image_data_2["euler_angles"],model_manager._image_data_1["euler_angles"])]
+        transformation["rotation_Z"], transformation["rotation_Y"],transformation["rotation_X"] = [a -b for a , b in zip(model_manager._image_data_2["euler_angles"],model_manager._image_data_1["euler_angles"])]
         print("translation from reference image to image ", i, " is ", transformation["translation_X"], transformation["translation_Y"], transformation["translation_Z"])
+        print(transformation["rotation_Z"])
+        print(transformation["rotation_Y"])
+        print(transformation["rotation_X"])
 
         # Compute error
         heat_map_pred = model_manager.selected_model.get_heatmap(image1_point)
@@ -152,33 +143,62 @@ if __name__ == '__main__':
     # Result save output path
     arg.add_argument('--result_path', type=str, default='./result/')
     known_args = arg.parse_known_args()[0]
-    config_ids = ["(id_1_1)","(id_1_2)"]
+    #config_ids = ["(id_1_1)","(id_1_2)","(id_1_3_2)","(id_1_4)","(id_1_5)","(id_1_6)","(id_1_7)"]
+    config_ids = [["(id_1_1)", "SD_DINO"],["(id_1_2)", "SD_DINO"],["(id_1_4)", "SD_DINO"],["(id_1_4)", "SD_DINO"],["(id_1_5)","SD_DINO"],["(id_1_6)","OPEN_CLIP"],["(id_1_7)", "OPEN_CLIP"]]
+    #config_ids = [ ["(id_1_6)", "OPEN_CLIP"]]
     # Parse the arguments
     args = vars(arg.parse_args())
 
     # Get the model manager
     error_list =[]
-    image_points =np.full((2,5), None)
-    for j,config in enumerate(config_ids):
-        print("generating for config", config)
-        datasets_list = [["data_translation_X_episode_1.pkl.gzip",
-                          f"{config}_descriptor_SD_DINO_data_translation_X_episode_1.pkl.gzip", "translation_X"],
-                         ["data_translation_X_episode_2.pkl.gzip",
-                          f"{config}_descriptor_SD_DINO_data_translation_X_episode_2.pkl.gzip", "translation_X"],
-                         ["data_translation_X_episode_3.pkl.gzip",
-                          f"{config}_descriptor_SD_DINO_data_translation_X_episode_3.pkl.gzip", "translation_X"],
-                         ["data_translation_X_episode_4.pkl.gzip",
-                          f"{config}_descriptor_SD_DINO_data_translation_X_episode_4.pkl.gzip", "translation_X"],
-                         ["data_translation_X_episode_5.pkl.gzip",
-                          f"{config}_descriptor_SD_DINO_data_translation_X_episode_5.pkl.gzip", "translation_X"]]
+    if os.path.exists("./result/key_points.pkl.gzip"):
+        f = gzip.open("./result/key_points.pkl.gzip", 'rb')
+        image_points = pickle.load(f)
+    else:
+        image_points =np.full((2,10), None)
+    transformations = [ "rotation_X", "rotation_Y", "rotation_Z"]
+    for transformation in transformations:
+        for j,config in enumerate(config_ids):
+            print("generating for config",config  , transformation)
+            datasets_list = [[f"data_{transformation}_episode_1.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_1.pkl.gzip", transformation],
+                             [f"data_{transformation}_episode_2.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_2.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_3.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_3.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_4.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_4.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_5.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_5.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_6.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_6.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_7.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_7.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_8.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_8.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_9.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_9.pkl.gzip",
+                              transformation],
+                             [f"data_{transformation}_episode_10.pkl.gzip",
+                              f"{config[0]}_descriptor_{config[1]}_data_{transformation}_episode_10.pkl.gzip",
+                              transformation]
+                             ]
 
 
 
-        for i,dataset in enumerate(datasets_list):
-            error, image_point, r_ = get_performance(model_name = known_args.model, dataset_name=dataset[0], descriptor_filename=dataset[1],dataset_path=known_args.dataset_path,
-                        translation_type=dataset[2],descriptor_dir=known_args.descriptor_dir,
-                        result_path=known_args.result_path, image1_point= image_points[0][i] ,region=image_points[1][i])
-            image_points[0][i] =image_point
+            for i,dataset in enumerate(datasets_list):
+                error, image_point, r_ = get_performance(model_name = known_args.model, dataset_name=dataset[0], descriptor_filename=dataset[1],dataset_path=known_args.dataset_path,
+                            translation_type=dataset[2],descriptor_dir=known_args.descriptor_dir,
+                            result_path=known_args.result_path, image1_point= image_points[0][i] ,region=image_points[1][i])
+                image_points[0][i] =image_point
+                image_points[1][i] = r_
+                error_list.append(error)
 
-            image_points[1][i] = r_
-            error_list.append(error)
+    store_data(image_points, "./result", "key_points.pkl.gzip")

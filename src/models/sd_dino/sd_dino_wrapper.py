@@ -198,6 +198,8 @@ class SDDINOWrapper(ModelWrapperBase):
 
             # Resize the image
             input_image = image.convert('RGB')
+            # Lossy resize input_image to load_size to ensure sd_model has no advantage...
+            input_image = input_image.resize((kwargs['load_size'], kwargs['load_size']), Image.BILINEAR)
             # Get the SD input image
             sd_image = resize(input_image, kwargs['sd_load_size'], resize=True, to_pil=True, edge=kwargs['edge_pad'])
             # Get the DINO input image
