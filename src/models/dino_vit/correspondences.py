@@ -157,6 +157,8 @@ def chunk_similarity(x: torch.Tensor, y: torch.Tensor, x_indices=None, metric='c
 
     result_list = []
     num_token_x = x.shape[2]
+    if isinstance(x_indices, int):
+        x_indices = [x_indices]
 
     # Allow for custom metric functions
     if metric == 'cosine':
