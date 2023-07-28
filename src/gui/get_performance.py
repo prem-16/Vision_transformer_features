@@ -187,6 +187,7 @@ if __name__ == '__main__':
         "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9"},
         "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5"},
         "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD"},
+
         "(id_1_4)": {
             "model_name": "SD_DINO",
             "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"],
@@ -197,17 +198,18 @@ if __name__ == '__main__':
             "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"],
             "exp_name": "SD + DINOv2 - stride 7, layer 11"
         },
+
         "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
         "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
         "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
     }
 
-    # Add the Euclidean version of the configs
-    config_euclidean = {
-        f"{key}_euclidean": item | {"metric": "euclidean"}
-        for key, item in configs.items()
-    }
-    configs = configs | config_euclidean
+    # # Add the Euclidean version of the configs
+    # config_euclidean = {
+    #     f"{key}_euclidean": item | {"metric": "euclidean"}
+    #     for key, item in configs.items()
+    # }
+    # configs = configs | config_euclidean
 
     filter_config = known_args.filter_config
     if filter_config is not None:
