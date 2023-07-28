@@ -182,15 +182,10 @@ def separate_head_similarity(metric="cosine", head_size=None):
         num_splits = x.shape[-1] // head_size
         similarities = torch.zeros((y.shape[0], y.shape[1], y.shape[2], num_splits))
 
-        print("NUM SPLITS", num_splits)
-        print("X SHAPE", x.shape)
-        print("Y SHAPE", y.shape)
         # For each head in x and y
         for i, (x_head, y_head) in enumerate(zip(
                 torch.split(x, num_splits, dim=-1), torch.split(y, num_splits, dim=-1)
         )):
-            print("X_HEAD shape", x_head.shape)
-            print("Y_HEAD shape", y_head.shape)
             # Compute similarity
             similarities[..., i] = metric(x_head, y_head)
 
@@ -241,6 +236,11 @@ if __name__ == '__main__':
         "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
         "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
 
+        "(id_1_5_2)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_2_2)", "(id_1_3_2)"],
+            "exp_name": "SD + DINOv2 - stride 7, layer 9"
+        },
         # Alternative metrics
         "(id_3_1)": {
             "model_name": "SD_DINO",
