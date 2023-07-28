@@ -212,27 +212,27 @@ if __name__ == '__main__':
     # of other descriptors...
     # Be careful!! The first descriptor config id defines the overall concatenated descriptor load_size!
     configs = {
-        # "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4"},
-        # "(id_1_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 8"},
-        # "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11"},
-        # "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9"},
-        # "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5"},
-        # "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD"},
-        #
-        # "(id_1_4)": {
-        #     "model_name": "SD_DINO",
-        #     "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"],
-        #     "exp_name": "SD + DINOv1 - stride 4"
-        # },
-        # "(id_1_5)": {
-        #     "model_name": "SD_DINO",
-        #     "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"],
-        #     "exp_name": "SD + DINOv2 - stride 7, layer 11"
-        # },
-        #
-        # # "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
-        # "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
-        # "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
+        "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4"},
+        "(id_1_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 8"},
+        "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11"},
+        "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9"},
+        "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5"},
+        "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD"},
+
+        "(id_1_4)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"],
+            "exp_name": "SD + DINOv1 - stride 4"
+        },
+        "(id_1_5)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"],
+            "exp_name": "SD + DINOv2 - stride 7, layer 11"
+        },
+
+        "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+        "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+        "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
 
         # Alternative metrics
         "(id_3_1)": {
@@ -299,46 +299,57 @@ if __name__ == '__main__':
         "translation_Y",
         "translation_Z"
     ]
-    # For each transformation
-    for transformation in tqdm(transformations):
-        # For each configuration i.e. specific model and settings
-        for config_id, config in tqdm(configs.items()):
-            print("Generating for config ", config_id, " ", config, " ", transformation)
-            for episode_id in range(1, 11):
-                print("Episode:", episode_id)
-                # Get the dataset file name
-                dataset_file = f"data_{transformation}_episode_{episode_id}.pkl.gzip"
-                # Get the descriptor file name(s)
-                descriptor_configs = config.get("descriptor_config_ids", [config_id])
-                descriptor_filenames = [
-                    f"{desc_config_id}_descriptor_{config['model_name']}"
-                    f"_data_{transformation}_episode_{episode_id}.pkl.gzip"
-                    for desc_config_id in descriptor_configs
-                ]
-                # Get the descriptor file path(s)
-                descriptor_paths = [
-                    os.path.join(known_args.descriptor_dir, descriptor_filename)
-                    for descriptor_filename in descriptor_filenames
-                ]
-                # Define output file name
-                output_filename = f"{config_id}_result_{config['model_name']}" \
-                                  f"_data_{transformation}_episode_{episode_id}.pkl.gzip"
 
-                error, image_point, r = get_performance(
-                    model_name=config['model_name'], dataset_name=dataset_file,
-                    dataset_path=known_args.dataset_path,
-                    translation_type=transformation,
-                    result_path=known_args.result_path,
-                    image1_point=image_points[0][episode_id - 1],
-                    region=image_points[1][episode_id - 1],
-                    descriptor_filenames=descriptor_filenames,
-                    descriptor_paths=descriptor_paths,
-                    output_filename=output_filename,
-                    metric=config.get("metric", "cosine"),
-                    exp_name=config['exp_name']
-                )
-                image_points[0][episode_id - 1] = image_point
-                image_points[1][episode_id - 1] = r
-                error_list.append(error)
+    exceptions_list = []
+
+    # For each configuration i.e. specific model and settings
+    for config_id, config in tqdm(configs.items()):
+        # For each transformation
+        for transformation in tqdm(transformations):
+            try:
+                print("Generating for config ", config_id, " ", config, " ", transformation)
+                for episode_id in range(1, 11):
+                    print("Episode:", episode_id)
+                    # Get the dataset file name
+                    dataset_file = f"data_{transformation}_episode_{episode_id}.pkl.gzip"
+                    # Get the descriptor file name(s)
+                    descriptor_configs = config.get("descriptor_config_ids", [config_id])
+                    descriptor_filenames = [
+                        f"{desc_config_id}_descriptor_{config['model_name']}"
+                        f"_data_{transformation}_episode_{episode_id}.pkl.gzip"
+                        for desc_config_id in descriptor_configs
+                    ]
+                    # Get the descriptor file path(s)
+                    descriptor_paths = [
+                        os.path.join(known_args.descriptor_dir, descriptor_filename)
+                        for descriptor_filename in descriptor_filenames
+                    ]
+                    # Define output file name
+                    output_filename = f"{config_id}_result_{config['model_name']}" \
+                                      f"_data_{transformation}_episode_{episode_id}.pkl.gzip"
+
+                    error, image_point, r = get_performance(
+                        model_name=config['model_name'], dataset_name=dataset_file,
+                        dataset_path=known_args.dataset_path,
+                        translation_type=transformation,
+                        result_path=known_args.result_path,
+                        image1_point=image_points[0][episode_id - 1],
+                        region=image_points[1][episode_id - 1],
+                        descriptor_filenames=descriptor_filenames,
+                        descriptor_paths=descriptor_paths,
+                        output_filename=output_filename,
+                        metric=config.get("metric", "cosine"),
+                        exp_name=config['exp_name']
+                    )
+                    image_points[0][episode_id - 1] = image_point
+                    image_points[1][episode_id - 1] = r
+                    error_list.append(error)
+
+            except Exception as e:
+                print("Exception occurred... Skipping this transformation")
+                exceptions_list.append((config_id, transformation))
+                continue
+
+    print("Exceptions list:\n", exceptions_list)
 
     store_data(image_points, "./result", "key_points.pkl.gzip")
