@@ -1,4 +1,6 @@
 import argparse
+import traceback
+
 import matplotlib.pyplot as plt
 import sys
 import cv2
@@ -347,7 +349,7 @@ if __name__ == '__main__':
 
             except Exception as e:
                 print("Exception occurred... Skipping this transformation")
-                print(e)
+                traceback.print_stack()
                 exceptions_list.append((config_id, transformation))
                 continue
 

@@ -96,7 +96,7 @@ class ModelGUIManager:
     def apply_setting(self, setting_name, setting_value):
         if self._settings.get(setting_name, None) != setting_value or setting_name not in self._settings:
             self._settings[setting_name] = setting_value
-            print("Applied setting ", setting_name, " with value ", setting_value)
+            # print("Applied setting ", setting_name, " with value ", setting_value)
             self._set_dirty()
 
     def process_images(self):
@@ -160,7 +160,7 @@ class ModelGUIManager:
             #   Load pkl
             pkl = pickle.load(f)
             assert pkl is not None, "pkl file not loaded"
-            print(len(pkl['descriptors'][0][0]))
+            # print(len(pkl['descriptors'][0][0]))
 
             # Resize descriptors here
             pkl['descriptors'] = [
@@ -174,8 +174,8 @@ class ModelGUIManager:
                 descriptor_shape_config_1 = list(cache_contents['descriptors'][0][0].shape)
                 descriptor_shape_config_2 = list(pkl['descriptors'][0][0].shape)
 
-                print("descriptor_orig_shape_config_1", descriptor_shape_config_1)
-                print("descriptor_orig_shape_config_2", descriptor_shape_config_2)
+                # print("descriptor_orig_shape_config_1", descriptor_shape_config_1)
+                # print("descriptor_orig_shape_config_2", descriptor_shape_config_2)
 
                 # For each descriptor...
                 for i in range(len(pkl['descriptors'])):
@@ -219,7 +219,7 @@ class ModelGUIManager:
         else:
             raise ValueError("Incorrect type.")
         # Build cache
-        print(point)
+        # print(point)
         cache = self._build_similarity_cache_from_descriptor_dump(
             descriptors[0], descriptors[ref_index], point=point, metric=metric
         )
@@ -245,9 +245,9 @@ class ModelGUIManager:
         # Get the grid dim of patches
         num_patches_1 = other_info_1['num_patches']
         num_patches_2 = other_info_2['num_patches']
-        print(
-            point
-        )
+        # print(
+        #     point
+        # )
         # calculate similarity between image1 and image2 descriptors
         if point is None:
             index = None
@@ -267,7 +267,7 @@ class ModelGUIManager:
 
     @staticmethod
     def _compute_similarity(descriptors_1, descriptors_2, index=None, metric='cosine'):
-        print(index)
+        # print(index)
         if index is None:
             return chunk_similarity(descriptors_1, descriptors_2, metric=metric)
         else:
