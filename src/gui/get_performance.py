@@ -347,11 +347,10 @@ if __name__ == '__main__':
                     image_points[1][episode_id - 1] = r
                     error_list.append(error)
 
-            except Exception as e:
+            except:
                 print("Exception occurred... Skipping this transformation")
                 traceback.print_stack()
                 exceptions_list.append((config_id, transformation))
-                continue
 
     print("Exceptions list:\n", exceptions_list)
 
