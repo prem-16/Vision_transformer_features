@@ -182,10 +182,15 @@ def separate_head_similarity(metric="cosine", head_size=None):
         num_splits = x.shape[-1] // head_size
         similarities = torch.zeros((num_splits,))
 
+        print("NUM SPLITS", num_splits)
+        print("X SHAPE", x.shape)
+        print("Y SHAPE", y.shape)
         # For each head in x and y
         for i, (x_head, y_head) in enumerate(zip(
                 torch.split(x, num_splits, dim=-1), torch.split(y, num_splits, dim=-1)
         )):
+            print("X_HEAD shape", x_head.shape)
+            print("Y_HEAD shape", y_head.shape)
             # Compute similarity
             similarities[i] = metric(x_head, y_head)
 
