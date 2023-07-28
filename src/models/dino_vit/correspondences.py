@@ -172,14 +172,13 @@ def chunk_similarity(x: torch.Tensor, y: torch.Tensor, x_indices=None, metric='c
         for token_idx in tqdm(range(num_token_x)):
             token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
             result_list.append(metric_func(token, y))  # Bx1xt
+        return torch.stack(result_list, dim=2)  # Bx1x(t_x)x(t_y)
     else:
-        for token_idx in tqdm(range(num_token_x)):
-            if token_idx == x_indices:
-                token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
-                result_list.append(metric_func(token, y))  # Bx1xt
-            else:
-                result_list.append(torch.zeros(x.shape[0], 1, num_token_x))  # Bx1xt
-    return torch.stack(result_list, dim=2)  # Bx1x(t_x)x(t_y)
+        results = torch.zeros((len(x_indices), x.shape[0], 1, num_token_x))
+        for token_idx in x_indices:
+            token = x[:, :, token_idx, :].unsqueeze(dim=2)
+            results[token_idx] = metric_func(token, y)
+        return results.permute(1, 2, 0, 3)
 
 
 """ taken from https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse"""
