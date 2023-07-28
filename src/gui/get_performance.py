@@ -64,7 +64,7 @@ def get_performance(
     }
     model_manager.build_super_cache(pkl_paths=descriptor_paths)
     # correspondance name for storing image
-    correspondance_name = descriptor_filenames[0].replace(".pkl.gzip", "")
+    correspondance_name = output_filename.replace(".pkl.gzip", "")
     corr_dir = os.path.join(result_path, correspondance_name)
     if not os.path.exists(corr_dir):
         os.makedirs(corr_dir)
@@ -94,7 +94,7 @@ def get_performance(
             plt.title(f"Image Correspondence")
             plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="ground truth")
             plt.legend()
-
+            print("image saved in" , corr_dir)
             plt.savefig(os.path.join(corr_dir, f"correspondence_{i}_{correspondance_name}.png"))
             plt.close()
 
@@ -192,13 +192,21 @@ if __name__ == '__main__':
         image_points = np.full((2, 10), None)
 
     # Define the transformations
-    transformations = ["rotation_X", "rotation_Y", "rotation_Z", "translation_X", "translation_Y", "translation_Z"]
+    transformations = [
+        #"rotation_X",
+        "rotation_Y",
+        #"rotation_Z",
+        #"translation_X",
+        #"translation_Y",
+        #"translation_Z"
+    ]
     # For each transformation
     for transformation in transformations:
         # For each configuration i.e. specific model and settings
         for config_id, config in configs.items():
             print("Generating for config ", config_id, " ", config, " ", transformation)
             for episode_id in range(1, 11):
+                print("Episode:", episode_id)
                 # Get the dataset file name
                 dataset_file = f"data_{transformation}_episode_{episode_id}.pkl.gzip"
                 # Get the descriptor file name(s)
