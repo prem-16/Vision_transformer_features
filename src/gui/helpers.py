@@ -31,12 +31,12 @@ def read_data(datasets_dir="./test_data", dataset_name="data.pkl.gzip"):
     """
     This method reads the states from the data file(data.pkl.gzip).
     """
-    print("... read data")
+    # print("... read data")
     data_file = os.path.join(datasets_dir, dataset_name)
 
     f = gzip.open(data_file, 'rb')
     data = pickle.load(f)
-    print(len(data['image_rgb']))
+    # print(len(data['image_rgb']))
     # get images as features and actions as targets
 
     sample = {

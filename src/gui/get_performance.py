@@ -347,6 +347,7 @@ if __name__ == '__main__':
 
             except Exception as e:
                 print("Exception occurred... Skipping this transformation")
+                print(e)
                 exceptions_list.append((config_id, transformation))
                 continue
 
