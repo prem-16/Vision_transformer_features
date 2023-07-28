@@ -231,14 +231,40 @@ if __name__ == '__main__':
         "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
         "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
         "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
-    }
 
-    # # Add the Euclidean version of the configs
-    # config_euclidean = {
-    #     f"{key}_euclidean": item | {"metric": "euclidean"}
-    #     for key, item in configs.items()
-    # }
-    # configs = configs | config_euclidean
+        # Alternative metrics
+        "(id_3_1)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_1)"],
+            "metric": separate_head_similarity(metric="cosine", head_size=6),
+            "exp_name": "DINOv1 - stride 4, per-head cosine similarity"
+        },
+        "(id_3_2)": {
+            "model_name": "OPEN_CLIP",
+            "descriptor_config_ids": ["(id_1_7)"],
+            "metric": "euclidean",
+            "exp_name": "OpenCLIP - euclidean similarity"
+        },
+        "(id_3_3)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_3_2)"],
+            "metric": "euclidean",
+            "exp_name": "SD - euclidean similarity"
+        },
+        "(id_3_4)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_1)"],
+            "metric": "euclidean",
+            "exp_name": "DINOv1 - stride 4, euclidean similarity"
+        },
+        "(id_3_5)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_2)"],
+            "metric": "euclidean",
+            "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
+        },
+
+    }
 
     filter_config = known_args.filter_config
     if filter_config is not None:
