@@ -180,7 +180,7 @@ def separate_head_similarity(metric="cosine", head_size=None):
         # We want to return a tensor of shape (b, 1, t)
 
         num_splits = x.shape[-1] // head_size
-        similarities = torch.zeros((1, 1, 1000, num_splits))
+        similarities = torch.zeros((y.shape[0], y.shape[1], y.shape[2], num_splits))
 
         print("NUM SPLITS", num_splits)
         print("X SHAPE", x.shape)
