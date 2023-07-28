@@ -172,6 +172,8 @@ if __name__ == '__main__':
     arg.add_argument('--descriptor_dir', type=str, default='./test_data/descriptors')
     # Result save output path
     arg.add_argument('--result_path', type=str, default='./result/')
+    # Parse the known arguments
+    arg.add_argument('--filter_config', type=str, default=None)
     known_args = arg.parse_known_args()[0]
 
     # Define the configs
@@ -206,6 +208,17 @@ if __name__ == '__main__':
         for key, item in configs.items()
     }
     configs = configs | config_euclidean
+
+    filter_config = known_args.filter_config
+    if filter_config is not None:
+        # Delimit the filter config by , and remove any whitespace
+        filter_config = [config.strip() for config in filter_config.split(",")]
+        # Remove any configs that are not in the filter config
+        configs = {
+            key: value
+            for key, value in configs.items()
+            if key in filter_config
+        }
 
     # Parse the arguments
     args = vars(arg.parse_args())
