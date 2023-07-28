@@ -47,6 +47,7 @@ def get_performance(
         print("using stored image point", image1_point)
         r = region
 
+
     error_list = []
     translation_list = []
     for key, value in dataset_data.items():
@@ -69,6 +70,9 @@ def get_performance(
     if not os.path.exists(corr_dir):
         os.makedirs(corr_dir)
 
+    plt.imshow(reference_image)
+    plt.scatter(r[0], r[1], c='r', marker='x', label="Reference point")
+    plt.savefig(os.path.join(corr_dir, f"Reference_image_{exp_name}.png"))
     # Iterate over remaining images of the sequence
     for i, target_image in enumerate(dataset_data['image_rgb'][0:]):
         # Build the cache for the model
@@ -90,9 +94,9 @@ def get_performance(
         ground_truth_map = model_manager.create_ground_truth_map((r[0], r[1]))
         ground_truth_point = model_manager._transform_points((r[0], r[1]))
         if i % 5 == 0:
-            plt.scatter(pred_index[0], pred_index[1], c='b', marker='x', label=model_manager.selected_model.NAME)
+            plt.scatter(pred_index[0], pred_index[1], c='b', marker='x', label=exp_name)
             plt.title(f"Image Correspondence")
-            plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="ground truth")
+            plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="Ground truth")
             plt.legend()
             print("image saved in", corr_dir)
             plt.savefig(os.path.join(corr_dir, f"correspondence_{i}_{correspondance_name}.png"))
