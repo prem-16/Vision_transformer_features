@@ -5,7 +5,7 @@ import torch
 
 from src.models.model_wrapper_list import MODEL_DICT
 import numpy as np
-from src.models.dino_vit.correspondences import chunk_cosine_sim
+from src.models.dino_vit.correspondences import chunk_similarity
 
 
 class ModelGUIManager:
@@ -196,14 +196,12 @@ class ModelGUIManager:
 
         for descriptors in cache_contents['descriptors']:
             descriptors[1]['num_patches'] = (target_num_patches, target_num_patches)
+
         self.super_cache = cache_contents
 
-    def build_cache_from_pkl_gzip(self, pkl_paths, ref_index, point=None):
+    def build_cache_from_pkl_gzip(self, pkl_paths, ref_index, point=None, metric='cosine'):
         """
         Build class and create cache from pkl gzip file.
-
-        :param desc_pkl_path_1:
-        :return:
         """
         if self.super_cache is None:
             self.build_super_cache(pkl_paths)
@@ -222,14 +220,18 @@ class ModelGUIManager:
             raise ValueError("Incorrect type.")
         # Build cache
         print(point)
-        cache = self._build_similarity_cache_from_descriptor_dump(descriptors[0], descriptors[ref_index], point=point)
+        cache = self._build_similarity_cache_from_descriptor_dump(
+            descriptors[0], descriptors[ref_index], point=point, metric=metric
+        )
 
         # Set cache
         self.selected_model._cache = cache
         self._settings = settings
 
     @classmethod
-    def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2, point=None):
+    def _build_similarity_cache_from_descriptor_dump(
+            cls, descriptor_dump_1, descriptor_dump_2, point=None, metric='cosine'
+    ):
         """
         Build cache from the compute descriptor dump, this includes computing the similarities.
         :param descriptor_dump_1:
@@ -253,7 +255,7 @@ class ModelGUIManager:
             index = cls._get_descriptor_index_from_point(
                 point, num_patches_1
             )
-        similarities = cls._compute_similarity(descriptors_1, descriptors_2, index=index)
+        similarities = cls._compute_similarity(descriptors_1, descriptors_2, index=index, metric=metric)
 
         return {
             "descriptors_1": descriptors_1,
@@ -264,13 +266,13 @@ class ModelGUIManager:
         }
 
     @staticmethod
-    def _compute_similarity(descriptors_1, descriptors_2, index=None):
+    def _compute_similarity(descriptors_1, descriptors_2, index=None, metric='cosine'):
         print(index)
         if index is None:
-            return chunk_cosine_sim(descriptors_1, descriptors_2)
+            return chunk_similarity(descriptors_1, descriptors_2, metric=metric)
         else:
 
-            return chunk_cosine_sim(descriptors_1, descriptors_2, index)
+            return chunk_similarity(descriptors_1, descriptors_2, index, metric=metric)
 
     @staticmethod
     def _get_descriptor_index_from_point(point, num_patches):

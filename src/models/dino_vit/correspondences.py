@@ -1,4 +1,6 @@
 import argparse
+from builtins import function
+
 import torch
 from pathlib import Path
 from src.models.dino_vit.extractor import ViTExtractor
@@ -48,7 +50,7 @@ def find_correspondences(image_path1: str, image_path2: str, num_pairs: int = 10
     fg_mask2 = saliency_map2 > thresh
 
     # calculate similarity between image1 and image2 descriptors
-    similarities = chunk_cosine_sim(descriptors1, descriptors2)
+    similarities = chunk_similarity(descriptors1, descriptors2)
 
     # calculate best buddies
     image_idxs = torch.arange(num_patches1[0] * num_patches1[1], device=device)
@@ -149,30 +151,35 @@ def draw_correspondences(points1: List[Tuple[float, float]], points2: List[Tuple
     return fig1, fig2
 
 
-
-
-def chunk_cosine_sim(x: torch.Tensor, y: torch.Tensor , x_indices = None) -> torch.Tensor:
+def chunk_similarity(x: torch.Tensor, y: torch.Tensor, x_indices=None, metric='cosine') -> torch.Tensor:
     """ Computes cosine similarity between all possible pairs in two sets of vectors.
     Operates on chunks so no large amount of GPU RAM is required.
-    :param x: an tensor of descriptors of shape Bx1x(t_x)xd' where d' is the dimensionality of the descriptors and t_x
-    is the number of tokens in x.
-    :param y: a tensor of descriptors of shape Bx1x(t_y)xd' where d' is the dimensionality of the descriptors and t_y
-    is the number of tokens in y.
     :return: cosine similarity between all descriptors in x and all descriptors in y. Has shape of Bx1x(t_x)x(t_y) """
 
     result_list = []
     num_token_x = x.shape[2]
+
+    # Allow for custom metric functions
+    if metric == 'cosine':
+        metric_func = torch.nn.CosineSimilarity(dim=3)
+    elif metric == 'euclidean':
+        metric_func = torch.nn.PairwiseDistance()
+    elif isinstance(metric, torch.nn.Module) or callable(metric):
+        metric_func = metric
+    else:
+        raise ValueError(f"metric must be either 'cosine', 'euclidean', or a callable function. Got {metric} instead.")
+
     if x_indices == None:
         for token_idx in tqdm(range(num_token_x)):
             token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
-            result_list.append(torch.nn.CosineSimilarity(dim=3)(token, y))  # Bx1xt
+            result_list.append(metric_func(token, y))  # Bx1xt
     else:
         for token_idx in tqdm(range(num_token_x)):
             if token_idx == x_indices:
                 token = x[:, :, token_idx, :].unsqueeze(dim=2)  # Bx1x1xd'
-                result_list.append(torch.nn.CosineSimilarity(dim=3)(token, y))  # Bx1xt
+                result_list.append(metric_func(token, y))  # Bx1xt
             else:
-                result_list.append(torch.zeros(x.shape[0] ,1,num_token_x))  # Bx1xt
+                result_list.append(torch.zeros(x.shape[0], 1, num_token_x))  # Bx1xt
     return torch.stack(result_list, dim=2)  # Bx1x(t_x)x(t_y)
 
 

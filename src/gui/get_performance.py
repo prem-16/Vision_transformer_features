@@ -25,7 +25,7 @@ def get_error_heatmap(heatmap1, heatmap2):
 def get_performance(
         model_name, dataset_name, dataset_path, translation_type: str,
         result_path, descriptor_filenames: list[str], descriptor_paths: list[str],
-        output_filename: str, image1_point=None, region=None
+        output_filename: str, image1_point=None, region=None, metric="cosine", exp_name=None
 ):
     DATASET_PATH = ""
 
@@ -62,7 +62,7 @@ def get_performance(
         "rotation_Y": [],
         "rotation_Z": [],
     }
-    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches= 300)
+    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=200)
     # correspondance name for storing image
     correspondance_name = output_filename.replace(".pkl.gzip", "")
     corr_dir = os.path.join(result_path, correspondance_name)
@@ -73,8 +73,8 @@ def get_performance(
     for i, target_image in enumerate(dataset_data['image_rgb'][0:]):
         # Build the cache for the model
         # i.e. set the descriptors, and build the similarities
+        model_manager.build_cache_from_pkl_gzip(descriptor_paths, i, point=image1_point, metric=metric)
 
-        model_manager.build_cache_from_pkl_gzip(descriptor_paths, i, point=image1_point)
         # Set re-process flag to false
         model_manager._dirty = False
         model_manager._image_data_2 = {key: value[i] for key, value in dataset_data.items()}
@@ -94,7 +94,7 @@ def get_performance(
             plt.title(f"Image Correspondence")
             plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="ground truth")
             plt.legend()
-            print("image saved in" , corr_dir)
+            print("image saved in", corr_dir)
             plt.savefig(os.path.join(corr_dir, f"correspondence_{i}_{correspondance_name}.png"))
             plt.close()
 
@@ -144,6 +144,15 @@ def get_performance(
 
     fig, ax = plt.subplots()
     ax.plot(translation_list, error_list)
+
+    # Get the x label
+    x_label = translation_type
+    # Remove _ from the label
+    x_label = x_label.replace("_", " ")
+    # Capitalize the first letter
+    x_label = x_label.capitalize()
+
+    ax.set(xlabel=x_label, ylabel='MSE error', title=f"Error vs {translation_type}")
     plt.savefig(result_path + f"result_{correspondance_name}.png")
     return list_of_errors, image1_point, r
 
@@ -166,20 +175,34 @@ if __name__ == '__main__':
     # of other descriptors...
     # Be careful!! The first descriptor config id defines the overall concatenated descriptor load_size!
     configs = {
-        #"(id_1_1)": {"model_name": "SD_DINO"},
-        #"(id_1_2)": {"model_name": "SD_DINO"},
-        #"(id_1_3_2)": {"model_name": "SD_DINO"},
-        # "(id_1_4)": {
-        #     "model_name": "SD_DINO",
-        #     "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"]
-        # },
+        "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4"},
+        "(id_1_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 8"},
+        "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11"},
+        "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9"},
+        "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5"},
+        "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD"},
+        "(id_1_4)": {
+            "model_name": "SD_DINO",
+            "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"],
+            "exp_name": "SD + DINOv1 - stride 4"
+        },
         "(id_1_5)": {
             "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"]
+            "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"],
+            "exp_name": "SD + DINOv2 - stride 7, layer 11"
         },
-       # "(id_1_6)": {"model_name": "OPEN_CLIP"},
-       # "(id_1_7)": {"model_name": "OPEN_CLIP"}
+        "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+        "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+        "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
     }
+
+    # Add the Euclidean version of the configs
+    config_euclidean = {
+        f"{key}_euclidean": item | {"metric": "euclidean"}
+        for key, item in configs.items()
+    }
+    configs = configs | config_euclidean
+
     # Parse the arguments
     args = vars(arg.parse_args())
     # Keep track of the errors
@@ -193,12 +216,12 @@ if __name__ == '__main__':
 
     # Define the transformations
     transformations = [
-        #"rotation_X",
+        "rotation_X",
         "rotation_Y",
-        #"rotation_Z",
-        #"translation_X",
-        #"translation_Y",
-        #"translation_Z"
+        "rotation_Z",
+        "translation_X",
+        "translation_Y",
+        "translation_Z"
     ]
     # For each transformation
     for transformation in transformations:
@@ -230,14 +253,16 @@ if __name__ == '__main__':
                     dataset_path=known_args.dataset_path,
                     translation_type=transformation,
                     result_path=known_args.result_path,
-                    image1_point=image_points[0][episode_id-1],
-                    region=image_points[1][episode_id-1],
+                    image1_point=image_points[0][episode_id - 1],
+                    region=image_points[1][episode_id - 1],
                     descriptor_filenames=descriptor_filenames,
                     descriptor_paths=descriptor_paths,
-                    output_filename=output_filename
+                    output_filename=output_filename,
+                    metric=config.get("metric", "cosine"),
+                    exp_name=config['exp_name']
                 )
-                image_points[0][episode_id-1] = image_point
-                image_points[1][episode_id-1] = r
+                image_points[0][episode_id - 1] = image_point
+                image_points[1][episode_id - 1] = r
                 error_list.append(error)
 
     store_data(image_points, "./result", "key_points.pkl.gzip")

@@ -4,7 +4,7 @@ from sd_dino.extractor_dino import ViTExtractor
 # # STRIDE = 14 if DINO_V2 else 4
 
 # Patch size: 14
-LOAD_SIZE = 512
+LOAD_SIZE = 448
 STRIDE = 1
 DINO_V2 = True
 

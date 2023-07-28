@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from src.models.dino_vit.correspondences import chunk_cosine_sim
+from src.models.dino_vit.correspondences import chunk_similarity
 from src.models.dino_vit.extractor import ViTExtractor
 from src.models.model_wrapper import ModelWrapperBase
 

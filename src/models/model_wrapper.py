@@ -6,7 +6,7 @@ from PIL import Image
 import gzip
 import pickle
 import os
-from src.models.dino_vit.correspondences import chunk_cosine_sim
+from src.models.dino_vit.correspondences import chunk_similarity
 
 
 class ModelWrapperBase(ABC):
@@ -20,7 +20,7 @@ class ModelWrapperBase(ABC):
 
     @staticmethod
     def _compute_similarity(descriptors_1, descriptors_2):
-        return chunk_cosine_sim(descriptors_1, descriptors_2)
+        return chunk_similarity(descriptors_1, descriptors_2)
 
     @classmethod
     def _build_similarity_cache_from_descriptor_dump(cls, descriptor_dump_1, descriptor_dump_2):
