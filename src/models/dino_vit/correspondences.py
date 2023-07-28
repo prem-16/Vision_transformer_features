@@ -176,7 +176,7 @@ def chunk_similarity(x: torch.Tensor, y: torch.Tensor, x_indices=None, metric='c
             result_list.append(metric_func(token, y))  # Bx1xt
         return torch.stack(result_list, dim=2)  # Bx1x(t_x)x(t_y)
     else:
-        results = torch.zeros((len(x_indices), x.shape[0], 1, num_token_x))
+        results = torch.zeros((num_token_x, x.shape[0], 1, num_token_x))
         for token_idx in x_indices:
             token = x[:, :, token_idx, :].unsqueeze(dim=2)
             results[token_idx] = metric_func(token, y)
