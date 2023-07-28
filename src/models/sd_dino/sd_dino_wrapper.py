@@ -61,7 +61,7 @@ class SDDINOWrapper(ModelWrapperBase):
         "facet": {
             # Totally dependent on chosen settings
             "type": "hidden",
-            "default": None
+            "default": "empty"
         },
         "text_input": {
             "type": "hidden",
@@ -158,7 +158,9 @@ class SDDINOWrapper(ModelWrapperBase):
                 if isinstance(stride, str):
                     stride = int(stride)
 
-                facet = facet if facet is not None else ('token' if settings['dino_v2'] else 'key')
+                facet = facet if (facet not in [None, 'empty']) else ('token' if settings['dino_v2'] else 'key')
+                if isinstance(facet, str):
+                    facet = int(facet)
 
                 extractor = ViTExtractor(model_type, stride, device=device)
 

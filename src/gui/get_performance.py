@@ -47,7 +47,6 @@ def get_performance(
         print("using stored image point", image1_point)
         r = region
 
-
     error_list = []
     translation_list = []
     for key, value in dataset_data.items():
@@ -159,6 +158,36 @@ def get_performance(
     ax.set(xlabel=x_label, ylabel='MSE error', title=f"Error vs {translation_type}")
     plt.savefig(result_path + f"result_{correspondance_name}.png")
     return list_of_errors, image1_point, r
+
+
+def separate_head_similarity(metric="cosine", head_size=None):
+    assert head_size is not None, "Head size must be specified."
+
+    if metric == "cosine":
+        metric = torch.nn.CosineSimilarity(dim=3)
+    elif metric == "euclidean":
+        metric = torch.nn.PairwiseDistance()
+    else:
+        raise Exception("Unknown metric")
+
+    def metric_func(x, y):
+        # We assume x is of shape (b, 1, 1, d)
+        # We assume y is of shape (b, 1, t, d)
+        # We want to return a tensor of shape (b, 1, t)
+
+        num_splits = x.shape[-1] // head_size
+        similarities = torch.zeros((num_splits,))
+
+        # For each head in x and y
+        for i, (x_head, y_head) in enumerate(zip(
+                torch.split(x, num_splits, dim=-1), torch.split(y, num_splits, dim=-1)
+        )):
+            # Compute similarity
+            similarities[i] = metric(x_head, y_head)
+
+        return torch.max(similarities, dim=-1, keepdim=False)
+
+    return metric_func
 
 
 if __name__ == '__main__':
