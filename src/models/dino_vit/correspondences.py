@@ -159,6 +159,7 @@ def chunk_cosine_sim(x: torch.Tensor, y: torch.Tensor , x_indices = None) -> tor
     :param y: a tensor of descriptors of shape Bx1x(t_y)xd' where d' is the dimensionality of the descriptors and t_y
     is the number of tokens in y.
     :return: cosine similarity between all descriptors in x and all descriptors in y. Has shape of Bx1x(t_x)x(t_y) """
+
     result_list = []
     num_token_x = x.shape[2]
     if x_indices == None:

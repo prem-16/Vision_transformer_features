@@ -139,8 +139,7 @@ class ModelGUIManager:
         descriptor_target_spatial_shape = (
             descriptor_orig_shape[0],
             descriptor_orig_shape[1],
-            target_num_patches,
-            target_num_patches,
+            target_num_patches * target_num_patches,
             descriptor_orig_shape[-1]
         )
         return torch.nn.functional.interpolate(
@@ -153,7 +152,7 @@ class ModelGUIManager:
         if isinstance(pkl_paths, str):
             pkl_paths = [pkl_paths]
         assert isinstance(pkl_paths, list), "pkl_path must be a list of paths."
-
+        cache_contents = None
         for pkl_path in pkl_paths:
             # Load descriptors from pickle files
             #   Extract gzip
@@ -165,7 +164,7 @@ class ModelGUIManager:
 
             # Resize descriptors here
             pkl['descriptors'] = [
-                (self.resize_descriptor(pkl['descriptors'][0], target_num_patches), meta)
+                (self.resize_descriptor(descriptor, target_num_patches), meta)
                 for (descriptor, meta) in pkl['descriptors']
             ]
 
@@ -175,23 +174,6 @@ class ModelGUIManager:
                 descriptor_shape_config_1 = list(cache_contents['descriptors'][0][0].shape)
                 descriptor_shape_config_2 = list(pkl['descriptors'][0][0].shape)
 
-                descriptor_spatial_shape_config_1 = (
-                    descriptor_shape_config_1[0],
-                    descriptor_shape_config_1[1],
-                    target_num_patches,
-                    target_num_patches,
-                    descriptor_shape_config_1[-1]
-                )
-
-                combined_new_shape = (
-                    descriptor_shape_config_1[0],
-                    descriptor_shape_config_1[1],
-                    descriptor_shape_config_1[2],
-                    descriptor_shape_config_1[3] + descriptor_shape_config_2[3],
-                )
-
-                print("descriptor_spatial_shape_config_1", descriptor_spatial_shape_config_1)
-                print("combined_new_shape", combined_new_shape)
                 print("descriptor_orig_shape_config_1", descriptor_shape_config_1)
                 print("descriptor_orig_shape_config_2", descriptor_shape_config_2)
 
@@ -204,14 +186,16 @@ class ModelGUIManager:
                     temp[0] = torch.concatenate(
                         (
                             # Reshape base descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
-                            cache_contents['descriptors'][i][0].reshape(descriptor_spatial_shape_config_1),
+                            cache_contents['descriptors'][i][0],
                             # Resize additional descriptor to spatial shape of base descriptor
                             pkl['descriptors'][i][0]
                         ),
                         axis=-1
-                    ).reshape(combined_new_shape)
+                    )
                     cache_contents['descriptors'][i] = tuple(temp)
 
+        for descriptors in cache_contents['descriptors']:
+            descriptors[1]['num_patches'] = (target_num_patches, target_num_patches)
         self.super_cache = cache_contents
 
     def build_cache_from_pkl_gzip(self, pkl_paths, ref_index, point=None):

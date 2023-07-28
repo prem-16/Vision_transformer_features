@@ -93,7 +93,7 @@ class SDDINOWrapper(ModelWrapperBase):
         },
         "layer": {
             "type": "hidden",
-            "default": None
+            "default": "empty"
         }
     }
 
@@ -136,7 +136,7 @@ class SDDINOWrapper(ModelWrapperBase):
 
                 # Define layer
                 layer = settings.get('layer', None)
-                if layer is None:
+                if layer in [None, 'empty']:
                     # Large
                     if 'l' in model_type:
                         layer = 23
@@ -145,6 +145,8 @@ class SDDINOWrapper(ModelWrapperBase):
                         layer = 39
                     else:
                         layer = 11 if settings['dino_v2'] else 9
+                if isinstance(layer, str):
+                    layer = int(layer)
 
                 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -155,11 +157,9 @@ class SDDINOWrapper(ModelWrapperBase):
                 stride = stride if (stride not in [None, 'empty']) else (14 if settings['dino_v2'] else 4)
                 if isinstance(stride, str):
                     stride = int(stride)
-                print("USING STRIDE: ", stride)
 
                 facet = facet if facet is not None else ('token' if settings['dino_v2'] else 'key')
 
-                print("MODEL TYPE IS ", model_type)
                 extractor = ViTExtractor(model_type, stride, device=device)
 
                 patch_size = extractor.model.patch_embed.patch_size[

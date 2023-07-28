@@ -52,12 +52,12 @@ if __name__ == "__main__":
     parser.add_argument("--movement", type=str, default="translation_X")
     args = parser.parse_args()
     config_ids = [
-                  "id_1_1",
-                  "id_1_2",
-                  "id_1_4",
+                 # "id_1_1",
+                #  "id_1_2",
+              #    "id_1_4",
                   "id_1_5",
-                  "id_1_6",
-                  "id_1_7"
+             #     "id_1_6",
+             #     "id_1_7"
     ]
     plt.figure()
     for id in config_ids:
