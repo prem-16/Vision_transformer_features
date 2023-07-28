@@ -250,7 +250,7 @@ if __name__ == '__main__':
         },
         "(id_3_2)": {
             "model_name": "OPEN_CLIP",
-            "descriptor_config_ids": ["(id_1_7)"],
+            "descriptor_config_ids": ["(id_1_6)"],
             "metric": "euclidean",
             "exp_name": "OpenCLIP - euclidean similarity"
         },
@@ -356,6 +356,8 @@ if __name__ == '__main__':
                 print("Exception occurred... Skipping this transformation")
                 print(traceback.format_exc())
                 exceptions_list.append((config_id, transformation))
+
+        print("Done with config", config_id)
 
     print("Exceptions list:\n", exceptions_list)
 
