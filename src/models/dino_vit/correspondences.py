@@ -1,5 +1,4 @@
 import argparse
-from builtins import function
 
 import torch
 from pathlib import Path
