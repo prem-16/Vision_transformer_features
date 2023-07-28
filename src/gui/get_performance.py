@@ -2,6 +2,8 @@ import argparse
 import matplotlib.pyplot as plt
 import sys
 import cv2
+from tqdm import tqdm
+
 from src.gui.helpers import get_image_list, read_data, store_data
 from src.models.model_gui_manager import ModelGUIManager
 import numpy as np
@@ -298,9 +300,9 @@ if __name__ == '__main__':
         "translation_Z"
     ]
     # For each transformation
-    for transformation in transformations:
+    for transformation in tqdm(transformations):
         # For each configuration i.e. specific model and settings
-        for config_id, config in configs.items():
+        for config_id, config in tqdm(configs.items()):
             print("Generating for config ", config_id, " ", config, " ", transformation)
             for episode_id in range(1, 11):
                 print("Episode:", episode_id)
