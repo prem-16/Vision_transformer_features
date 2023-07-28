@@ -62,7 +62,7 @@ def get_performance(
         "rotation_Y": [],
         "rotation_Z": [],
     }
-    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=200)
+    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=100)
     # correspondance name for storing image
     correspondance_name = output_filename.replace(".pkl.gzip", "")
     corr_dir = os.path.join(result_path, correspondance_name)
@@ -228,41 +228,41 @@ if __name__ == '__main__':
             "exp_name": "SD + DINOv2 - stride 7, layer 11"
         },
 
-        "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+        # "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
         "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
         "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
 
-        # Alternative metrics
-        "(id_3_1)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_1)"],
-            "metric": separate_head_similarity(metric="cosine", head_size=6),
-            "exp_name": "DINOv1 - stride 4, per-head cosine similarity"
-        },
-        "(id_3_2)": {
-            "model_name": "OPEN_CLIP",
-            "descriptor_config_ids": ["(id_1_7)"],
-            "metric": "euclidean",
-            "exp_name": "OpenCLIP - euclidean similarity"
-        },
-        "(id_3_3)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_3_2)"],
-            "metric": "euclidean",
-            "exp_name": "SD - euclidean similarity"
-        },
-        "(id_3_4)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_1)"],
-            "metric": "euclidean",
-            "exp_name": "DINOv1 - stride 4, euclidean similarity"
-        },
-        "(id_3_5)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_2)"],
-            "metric": "euclidean",
-            "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
-        },
+        # # Alternative metrics
+        # "(id_3_1)": {
+        #     "model_name": "SD_DINO",
+        #     "descriptor_config_ids": ["(id_1_1)"],
+        #     "metric": separate_head_similarity(metric="cosine", head_size=6),
+        #     "exp_name": "DINOv1 - stride 4, per-head cosine similarity"
+        # },
+        # "(id_3_2)": {
+        #     "model_name": "OPEN_CLIP",
+        #     "descriptor_config_ids": ["(id_1_7)"],
+        #     "metric": "euclidean",
+        #     "exp_name": "OpenCLIP - euclidean similarity"
+        # },
+        # "(id_3_3)": {
+        #     "model_name": "SD_DINO",
+        #     "descriptor_config_ids": ["(id_1_3_2)"],
+        #     "metric": "euclidean",
+        #     "exp_name": "SD - euclidean similarity"
+        # },
+        # "(id_3_4)": {
+        #     "model_name": "SD_DINO",
+        #     "descriptor_config_ids": ["(id_1_1)"],
+        #     "metric": "euclidean",
+        #     "exp_name": "DINOv1 - stride 4, euclidean similarity"
+        # },
+        # "(id_3_5)": {
+        #     "model_name": "SD_DINO",
+        #     "descriptor_config_ids": ["(id_1_2)"],
+        #     "metric": "euclidean",
+        #     "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
+        # },
 
     }
 
