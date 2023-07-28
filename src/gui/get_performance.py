@@ -64,7 +64,7 @@ def get_performance(
         "rotation_Y": [],
         "rotation_Z": [],
     }
-    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=200)
+    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=100)
     # correspondance name for storing image
     correspondance_name = output_filename.replace(".pkl.gzip", "")
     corr_dir = os.path.join(result_path, correspondance_name)
