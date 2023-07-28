@@ -253,7 +253,7 @@ if __name__ == '__main__':
                                   f"_data_{transformation}_episode_{episode_id}.pkl.gzip"
 
                 error, image_point, r = get_performance(
-                    model_name=known_args.model, dataset_name=dataset_file,
+                    model_name=config['model_name'], dataset_name=dataset_file,
                     dataset_path=known_args.dataset_path,
                     translation_type=transformation,
                     result_path=known_args.result_path,
