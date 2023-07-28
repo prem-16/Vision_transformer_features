@@ -349,7 +349,7 @@ if __name__ == '__main__':
 
             except:
                 print("Exception occurred... Skipping this transformation")
-                traceback.print_stack()
+                print(traceback.format_exc())
                 exceptions_list.append((config_id, transformation))
 
     print("Exceptions list:\n", exceptions_list)
