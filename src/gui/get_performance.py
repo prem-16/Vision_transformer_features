@@ -42,18 +42,18 @@ def get_performance(
 
     # Select the object point to find the correspondence.
     if image1_point is None:
-        r = cv2.selectROI("select the object", reference_image)
+        r = cv2.selectROI("Select the object", reference_image)
         cv2.destroyAllWindows()
         image1_point = (r[0] / reference_image.shape[1], r[1] / reference_image.shape[0])
     else:
-        print("using stored image point", image1_point)
+        # print("Using stored image point", image1_point)
         r = region
 
     error_list = []
     translation_list = []
-    for key, value in dataset_data.items():
-        print(key)
-        print(len(value))
+    # for key, value in dataset_data.items():
+    #     print(key)
+    #     print(len(value))
     model_manager._image_data_1 = {key: value[0] for key, value in dataset_data.items()}
 
     transformation = {
@@ -99,7 +99,7 @@ def get_performance(
             plt.title(f"Image Correspondence")
             plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="Ground truth")
             plt.legend()
-            print("image saved in", corr_dir)
+            # print("Image saved in", corr_dir)
             plt.savefig(os.path.join(corr_dir, f"correspondence_{i}_{correspondance_name}.png"))
             plt.close()
 
@@ -124,13 +124,13 @@ def get_performance(
             )
         ]
 
-        print(
-            "translation from reference image to image ", i, " is ", transformation["translation_X"],
-            transformation["translation_Y"], transformation["translation_Z"]
-        )
-        print(transformation["rotation_Z"])
-        print(transformation["rotation_Y"])
-        print(transformation["rotation_X"])
+        # print(
+        #     "translation from reference image to image ", i, " is ", transformation["translation_X"],
+        #     transformation["translation_Y"], transformation["translation_Z"]
+        # )
+        # print(transformation["rotation_Z"])
+        # print(transformation["rotation_Y"])
+        # print(transformation["rotation_X"])
 
         # Compute error
         heat_map_pred = model_manager.selected_model.get_heatmap(image1_point)
@@ -139,7 +139,7 @@ def get_performance(
         error = get_error_heatmap(ground_truth_map, heat_map_pred_r)
         error_list.append(error)
         translation_list.append(transformation[translation_type])
-        print("error for corresponding image from reference image  to image ", i, " is ", error)
+        # print("Error for corresponding image from reference image  to image ", i, " is ", error)
 
     list_of_errors = list(zip(translation_list, error_list))
     list_of_errors.sort(key=lambda x: x[0])
@@ -303,13 +303,13 @@ if __name__ == '__main__':
     exceptions_list = []
 
     # For each configuration i.e. specific model and settings
-    for config_id, config in tqdm(configs.items()):
+    for config_id, config in tqdm(configs.items(), position=0, desc="Configurations"):
         # For each transformation
-        for transformation in tqdm(transformations):
+        for transformation in tqdm(transformations, position=1, desc="Transformations"):
             try:
-                print("Generating for config ", config_id, " ", config, " ", transformation)
-                for episode_id in range(1, 11):
-                    print("Episode:", episode_id)
+                # print("Generating for config ", config_id, " ", config, " ", transformation)
+                for episode_id in tqdm(range(1, 11), position=2, desc="Episodes"):
+                    # print("Episode:", episode_id)
                     # Get the dataset file name
                     dataset_file = f"data_{transformation}_episode_{episode_id}.pkl.gzip"
                     # Get the descriptor file name(s)
