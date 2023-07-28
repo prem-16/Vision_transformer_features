@@ -6,6 +6,8 @@ import torch
 from src.models.model_wrapper_list import MODEL_DICT
 import numpy as np
 from src.models.dino_vit.correspondences import chunk_cosine_sim
+
+
 class ModelGUIManager:
     """
     A class to manage the models, their settings and further
@@ -80,8 +82,8 @@ class ModelGUIManager:
     def create_ground_truth_map(self, image1_points):
         image2_points = self._transform_points(image1_points)
         gt_map = np.zeros(self._image_data_2['image_rgb'].shape[:2])
-        image2_points[1] = max(min(int(image2_points[1]), gt_map.shape[0] -1) ,0)
-        image2_points[0] =max(min(int(image2_points[0]), gt_map.shape[1] -1) , 0)
+        image2_points[1] = max(min(int(image2_points[1]), gt_map.shape[0] - 1), 0)
+        image2_points[0] = max(min(int(image2_points[0]), gt_map.shape[1] - 1), 0)
         gt_map[int(image2_points[1])][int(image2_points[0])] = 1
         return gt_map
 
@@ -120,12 +122,38 @@ class ModelGUIManager:
         vis, heatmap = self.selected_model.get_heatmap_vis(self._image_dir_2, point)
         return vis, heatmap
 
-    def build_super_cache(self, pkl_paths):
+    def resize_descriptor(self, descriptor, target_num_patches):
+        # Descriptor will be of size (1, 1, num_patches**2, descriptor_size)
+        # Will return size (1, 1, target_num_patches**2, descriptor_size)
+        descriptor_orig_shape = list(descriptor.shape)
+        original_num_patches = int(np.sqrt(descriptor_orig_shape[2]))
+        # Original size but in spatial shape
+        descriptor_original_spatial_shape = (
+            descriptor_orig_shape[0],
+            descriptor_orig_shape[1],
+            original_num_patches,
+            original_num_patches,
+            descriptor_orig_shape[-1]
+        )
+        # Target size but in spatial shape
+        descriptor_target_spatial_shape = (
+            descriptor_orig_shape[0],
+            descriptor_orig_shape[1],
+            target_num_patches,
+            target_num_patches,
+            descriptor_orig_shape[-1]
+        )
+        return torch.nn.functional.interpolate(
+            # Reshape additional descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
+            descriptor.reshape(descriptor_original_spatial_shape)[0].permute(0, 3, 1, 2),
+            (target_num_patches, target_num_patches), mode='bilinear'
+        ).permute(0, 2, 3, 1).reshape(descriptor_target_spatial_shape)
+
+    def build_super_cache(self, pkl_paths, target_num_patches=120):
         if isinstance(pkl_paths, str):
             pkl_paths = [pkl_paths]
         assert isinstance(pkl_paths, list), "pkl_path must be a list of paths."
 
-        cache_contents = None
         for pkl_path in pkl_paths:
             # Load descriptors from pickle files
             #   Extract gzip
@@ -134,56 +162,39 @@ class ModelGUIManager:
             pkl = pickle.load(f)
             assert pkl is not None, "pkl file not loaded"
             print(len(pkl['descriptors'][0][0]))
+
+            # Resize descriptors here
+            pkl['descriptors'] = [
+                (self.resize_descriptor(pkl['descriptors'][0], target_num_patches), meta)
+                for (descriptor, meta) in pkl['descriptors']
+            ]
+
             if cache_contents is None:
                 cache_contents = pkl
             else:
-                # For all descriptors in the pkl
-                # Reshape them back to the original shape
-                # Then resize back, reshape and concat them to the existing descriptors
-                num_patches_config_1 = cache_contents['descriptors'][0][1]['num_patches'][0]
-                #assert np.sqrt(pkl['descriptors'][0][0].shape[2]) % 10 == 0, "Not square."
-                num_patches_config_2 = int(np.sqrt(pkl['descriptors'][0][0].shape[2]))
-
-                descriptor_orig_shape_config_1 = list(cache_contents['descriptors'][0][0].shape)
-                descriptor_orig_shape_config_2 = list(pkl['descriptors'][0][0].shape)
+                descriptor_shape_config_1 = list(cache_contents['descriptors'][0][0].shape)
+                descriptor_shape_config_2 = list(pkl['descriptors'][0][0].shape)
 
                 descriptor_spatial_shape_config_1 = (
-                    descriptor_orig_shape_config_1[0],
-                    descriptor_orig_shape_config_1[1],
-                    num_patches_config_1,
-                    num_patches_config_1,
-                    descriptor_orig_shape_config_1[-1]
-                )
-
-                descriptor_spatial_shape_config_2 = (
-                    descriptor_orig_shape_config_2[0],
-                    descriptor_orig_shape_config_2[1],
-                    num_patches_config_2,
-                    num_patches_config_2,
-                    descriptor_orig_shape_config_2[-1]
-                )
-
-                new_descriptor_spatial_shape_config_2 = (
-                    descriptor_orig_shape_config_2[0],
-                    descriptor_orig_shape_config_2[1],
-                    num_patches_config_1,
-                    num_patches_config_1,
-                    descriptor_orig_shape_config_2[-1]
+                    descriptor_shape_config_1[0],
+                    descriptor_shape_config_1[1],
+                    target_num_patches,
+                    target_num_patches,
+                    descriptor_shape_config_1[-1]
                 )
 
                 combined_new_shape = (
-                    descriptor_orig_shape_config_1[0],
-                    descriptor_orig_shape_config_1[1],
-                    descriptor_orig_shape_config_1[2],
-                    descriptor_orig_shape_config_1[3] + descriptor_orig_shape_config_2[3],
+                    descriptor_shape_config_1[0],
+                    descriptor_shape_config_1[1],
+                    descriptor_shape_config_1[2],
+                    descriptor_shape_config_1[3] + descriptor_shape_config_2[3],
                 )
+
                 print("descriptor_spatial_shape_config_1", descriptor_spatial_shape_config_1)
-                print("descriptor_spatial_shape_config_2", descriptor_spatial_shape_config_2)
                 print("combined_new_shape", combined_new_shape)
-                print("num_patches_config_1", num_patches_config_1)
-                print("num_patches_config_2", num_patches_config_2)
-                print("descriptor_orig_shape_config_1", descriptor_orig_shape_config_1)
-                print("descriptor_orig_shape_config_2", descriptor_orig_shape_config_2)
+                print("descriptor_orig_shape_config_1", descriptor_shape_config_1)
+                print("descriptor_orig_shape_config_2", descriptor_shape_config_2)
+
                 # For each descriptor...
                 for i in range(len(pkl['descriptors'])):
                     # Concatenate the descriptors on the descriptor axis
@@ -195,17 +206,11 @@ class ModelGUIManager:
                             # Reshape base descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
                             cache_contents['descriptors'][i][0].reshape(descriptor_spatial_shape_config_1),
                             # Resize additional descriptor to spatial shape of base descriptor
-                            torch.nn.functional.interpolate(
-                                # Reshape additional descriptor to spatial shape (1, 1, dim, dim, descriptor_size)
-                                pkl['descriptors'][i][0].reshape(descriptor_spatial_shape_config_2)[0].permute(0, 3, 1, 2),
-                                (num_patches_config_1, num_patches_config_1), mode='bilinear'
-                            ).permute(0, 2, 3, 1).reshape(new_descriptor_spatial_shape_config_2)
+                            pkl['descriptors'][i][0]
                         ),
                         axis=-1
                     ).reshape(combined_new_shape)
                     cache_contents['descriptors'][i] = tuple(temp)
-
-
 
         self.super_cache = cache_contents
 
@@ -263,8 +268,8 @@ class ModelGUIManager:
         else:
             index = cls._get_descriptor_index_from_point(
                 point, num_patches_1
-                )
-        similarities = cls._compute_similarity(descriptors_1, descriptors_2 ,index = index)
+            )
+        similarities = cls._compute_similarity(descriptors_1, descriptors_2, index=index)
 
         return {
             "descriptors_1": descriptors_1,
@@ -275,14 +280,13 @@ class ModelGUIManager:
         }
 
     @staticmethod
-    def _compute_similarity( descriptors_1, descriptors_2 ,index = None):
+    def _compute_similarity(descriptors_1, descriptors_2, index=None):
         print(index)
         if index is None:
             return chunk_cosine_sim(descriptors_1, descriptors_2)
         else:
 
-            return chunk_cosine_sim(descriptors_1, descriptors_2,index)
-
+            return chunk_cosine_sim(descriptors_1, descriptors_2, index)
 
     @staticmethod
     def _get_descriptor_index_from_point(point, num_patches):
@@ -302,5 +306,3 @@ class ModelGUIManager:
         # Get the descriptor map point's index
         point_index = int(point_y) * num_patches[1] + int(point_x)
         return point_index
-
-
