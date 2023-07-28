@@ -194,7 +194,7 @@ def separate_head_similarity(metric="cosine", head_size=None):
             # Compute similarity
             similarities[..., i] = metric(x_head, y_head)
 
-        return torch.max(similarities, dim=-1, keepdim=False)
+        return torch.max(similarities, dim=-1, keepdim=False)[0]
 
     return metric_func
 
