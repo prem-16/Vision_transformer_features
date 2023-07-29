@@ -18,7 +18,7 @@ import pickle
 
 
 def get_error(point1, point2):
-    return np.sqrt(np.sum(np.square(point1 - point2)))
+    return np.sqrt(np.average(np.square(point1 - point2)))
 
 
 def get_error_heatmap(heatmap1, heatmap2):
@@ -137,9 +137,11 @@ def get_performance(
         # Compute error
         heat_map_pred = model_manager.selected_model.get_heatmap(image1_point)
         heat_map_pred_r = np.resize(heat_map_pred, reference_image.shape[:2])
-
-        error = get_error_heatmap(ground_truth_map, heat_map_pred_r)
-        error_list.append(error)
+        # heatmap error
+        heat_map_error = get_error_heatmap(ground_truth_map, heat_map_pred_r)
+        # error for best point
+        mse_error = get_error(ground_truth_point, pred_index)
+        error_list.append(mse_error)
         translation_list.append(transformation[translation_type])
         # print("Error for corresponding image from reference image  to image ", i, " is ", error)
 
@@ -153,6 +155,7 @@ def get_performance(
     ax.plot(translation_list, error_list)
 
     # Get the x label
+    x_label = translation_type
     x_label = translation_type
     # Remove _ from the label
     x_label = x_label.replace("_", " ")
