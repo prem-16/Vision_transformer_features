@@ -80,9 +80,9 @@ if __name__ == "__main__":
     ]
 
     # Config ids to plot
-    # config_ids = ['id_1_1', 'id_1_5_2', 'id_3_1', 'id_3_2', 'id_3_3', 'id_3_4', 'id_3_5']
+    config_ids = ['id_3_3', 'id_3_5']
     # config_ids = ['id_1_6', 'id_3_2']
-    config_ids = ['id_1_1', 'id_1_1_2']
+    # config_ids = ['id_1_1', 'id_1_1_2']
     # Filter configs by keys that contain a string from configs_ids
     configs = {k: v for k, v in configs.items() if any(x in k for x in config_ids)}
 
