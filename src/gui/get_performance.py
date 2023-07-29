@@ -66,7 +66,8 @@ def get_performance(
         "rotation_Y": [],
         "rotation_Z": [],
     }
-    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=100)
+    target_patch_size =100
+    model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=target_patch_size)
     # correspondance name for storing image
     correspondance_name = output_filename.replace(".pkl.gzip", "")
     corr_dir = os.path.join(result_path, correspondance_name)
@@ -136,7 +137,9 @@ def get_performance(
 
         # Compute error
         heat_map_pred = model_manager.selected_model.get_heatmap(image1_point)
-        heat_map_pred_r = np.resize(heat_map_pred, reference_image.shape[:2])
+        assert heat_map_pred.shape == (target_patch_size,target_patch_size) , "Heatmap pred shape is not correct"
+        heat_map_pred_r = torch.nn.functional.interpolate(heat_map_pred, reference_image.shape[:2], mode='bilinear')
+
         # heatmap error
         heat_map_error = get_error_heatmap(ground_truth_map, heat_map_pred_r)
         # error for best point
