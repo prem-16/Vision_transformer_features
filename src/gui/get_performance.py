@@ -138,8 +138,14 @@ def get_performance(
         # Compute error
         heat_map_pred = model_manager.selected_model.get_heatmap(image1_point)
         assert heat_map_pred.shape == (target_patch_size,target_patch_size) , "Heatmap pred shape is not correct"
-        heat_map_pred_r = torch.nn.functional.interpolate(heat_map_pred, reference_image.shape[:2], mode='bilinear')
-
+        # Resize heatmap
+        heat_map_pred_r = torch.nn.functional.interpolate(
+            torch.tensor(heat_map_pred).reshape(1, 1, heat_map_pred.shape[0], heat_map_pred.shape[1]),
+            reference_image.shape[:2], mode='bilinear'
+        ).reshape(reference_image.shape[:2])
+        # One more norm to prevent any increased mass after resize...
+        heat_map_pred_r = (heat_map_pred_r - torch.min(heat_map_pred_r)) / (torch.max(heat_map_pred_r) - torch.min(heat_map_pred_r))
+        heat_map_pred_r = heat_map_pred_r.numpy()
         # heatmap error
         heat_map_error = get_error_heatmap(ground_truth_map, heat_map_pred_r)
         # error for best point
@@ -263,6 +269,18 @@ configs = {
         "metric": "euclidean",
         "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
     },
+
+    # More SD experiments
+    "(id_1_3_3)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_3_3)"],
+        "exp_name": "SD - s4 only"
+    },
+    "(id_1_3_4)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_3_4)"],
+        "exp_name": "SD - s5 only"
+    }
 
 }
 
