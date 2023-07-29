@@ -168,7 +168,14 @@ def get_performance(
         # Compute error
         heat_map_pred = model_manager.selected_model.get_heatmap(image1_point)
         assert heat_map_pred.shape == (target_patch_size,target_patch_size) , "Heatmap pred shape is not correct"
-        heat_map_pred_r = torch.nn.functional.interpolate(heat_map_pred, reference_image.shape[:2], mode='bilinear')
+        # Resize heatmap
+        heat_map_pred_r = torch.nn.functional.interpolate(
+            torch.tensor(heat_map_pred).reshape(1, 1, heat_map_pred.shape[0], heat_map_pred.shape[1]),
+            reference_image.shape[:2], mode='bilinear'
+        ).reshape(reference_image.shape[:2])
+        # One more norm to prevent any increased mass after resize...
+        heat_map_pred_r = (heat_map_pred_r - torch.min(heat_map_pred_r)) / (torch.max(heat_map_pred_r) - torch.min(heat_map_pred_r))
+        heat_map_pred_r = heat_map_pred_r.numpy()
 
         # Argmax error get_max_error
         max_point_error = get_max_error(r, heat_map_pred_r)
