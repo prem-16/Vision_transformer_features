@@ -21,8 +21,37 @@ def get_error(point1, point2):
     return np.sqrt(np.average(np.square(point1 - point2)))
 
 
-def get_error_heatmap(heatmap1, heatmap2):
-    return np.sqrt(np.sum(np.square(heatmap1 - heatmap2)))
+def get_max_error(point, heatmap):
+    # Sanitize the point
+    point[1] = max(min(int(point[1]), heatmap.shape[0] - 1), 0)
+    point[0] = max(min(int(point[0]), heatmap.shape[1] - 1), 0)
+
+    # Get the argmax (x, y) of the heatmap
+    max_point = np.unravel_index(np.argmax(heatmap, axis=None), heatmap.shape)[:2]
+
+    return np.sqrt((point[0] - max_point[0]) ** 2 + (point[1] - max_point[1]) ** 2)
+
+
+def get_prop_distance_error(point, heatmap):
+    # Sanitize the point
+    point[1] = max(min(int(point[1]), heatmap.shape[0] - 1), 0)
+    point[0] = max(min(int(point[0]), heatmap.shape[1] - 1), 0)
+    # Swap the x and y axis of the point numpy array
+    point = np.array([point[1], point[0]])
+
+    # Create reference Euclidean distance map
+    indices_y, indices_x = np.indices((heatmap.shape[0], heatmap.shape[1]))
+    distance_map = np.sqrt(np.sum((
+            point[:, np.newaxis, np.newaxis] - np.stack((indices_x, indices_y), axis=0)) ** 2
+    ), axis=0)
+
+    # Compute the error map
+    error_map = distance_map * heatmap
+
+    # Sum the error map
+    error = np.sum(error_map)
+
+    return error
 
 
 # model_manager._image_data_1 = {key: value[0] for key, value in image_data.items()}
@@ -51,7 +80,8 @@ def get_performance(
         # print("Using stored image point", image1_point)
         r = region
 
-    error_list = []
+    error_list_max_point = []
+    error_list_heatmap = []
     translation_list = []
     # for key, value in dataset_data.items():
     #     print(key)
@@ -140,22 +170,23 @@ def get_performance(
         assert heat_map_pred.shape == (target_patch_size,target_patch_size) , "Heatmap pred shape is not correct"
         heat_map_pred_r = torch.nn.functional.interpolate(heat_map_pred, reference_image.shape[:2], mode='bilinear')
 
-        # heatmap error
-        heat_map_error = get_error_heatmap(ground_truth_map, heat_map_pred_r)
-        # error for best point
-        mse_error = get_error(ground_truth_point, pred_index)
-        error_list.append(heat_map_error)
+        # Argmax error get_max_error
+        max_point_error = get_max_error(r, heat_map_pred_r)
+        # Distance prob error get_prop_distance_error
+        heat_map_error = get_prop_distance_error(r, heat_map_pred_r)
+        # Append the errors
+        error_list_max_point.append(max_point_error)
+        error_list_heatmap.append(heat_map_error)
         translation_list.append(transformation[translation_type])
-        # print("Error for corresponding image from reference image  to image ", i, " is ", error)
 
-    list_of_errors = list(zip(translation_list, error_list))
+    list_of_errors = list(zip(translation_list, error_list_heatmap, error_list_max_point))
     list_of_errors.sort(key=lambda x: x[0])
     store_data(list_of_errors, "./result", output_filename)
     result_name = output_filename.replace(".pkl.gzip", ".png")
-    translation_list, error_list = zip(*list_of_errors)
+    translation_list, error_list_heatmap, error_list_max_point = zip(*list_of_errors)
 
     fig, ax = plt.subplots()
-    ax.plot(translation_list, error_list)
+    ax.plot(translation_list, error_list_heatmap)
 
     # Get the x label
     x_label = translation_type
