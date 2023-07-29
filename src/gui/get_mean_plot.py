@@ -46,9 +46,6 @@ def average_error(model_configs="id_1_1", movement_type="translation_X"):
     print("Number of episodes ", i)
     """Average all episodes y and x values"""
 
-    if len(x_list) == 0:
-        return -1, -1
-
     x_mean = np.mean(x_list, axis=0)
     if movement_type.startswith("rotation"):
         x_mean = x_mean * (180 / math.pi)
