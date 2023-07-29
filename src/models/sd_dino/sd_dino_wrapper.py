@@ -168,8 +168,6 @@ class SDDINOWrapper(ModelWrapperBase):
                     stride = int(stride)
 
                 facet = facet if (facet not in [None, 'empty']) else ('token' if settings['dino_v2'] else 'key')
-                if isinstance(facet, str):
-                    facet = int(facet)
 
                 extractor = ViTExtractor(model_type, stride, device=device)
 
@@ -234,7 +232,7 @@ class SDDINOWrapper(ModelWrapperBase):
 
                     # If we're not using DINO then no need to resize to DINO's num_patches
                     if is_dino_fuse is False:
-                        num_patches = (image_desc_sd.shape[-2], image_desc_sd.shape[-1])
+                        num_patches = image_desc_sd.shape[-2]
                     else:
                         # Reshape (1, descriptor_size, 60, 60) to (1, descriptor_size, num_patches, num_patches)
                         image_desc_sd = torch.nn.functional.interpolate(
@@ -269,7 +267,7 @@ class SDDINOWrapper(ModelWrapperBase):
                     image_desc = image_desc_sd
 
             return image_desc.cpu(), {
-                "num_patches": num_patches,
+                "num_patches": (num_patches, num_patches),
                 "load_size": (dino_image.size[1], dino_image.size[0])
             }
 
