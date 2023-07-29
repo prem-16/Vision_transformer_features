@@ -295,6 +295,18 @@ configs = {
         "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
     },
 
+    # More SD experiments
+    "(id_1_3_3)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_3_3)"],
+        "exp_name": "SD - s4 only"
+    },
+    "(id_1_3_4)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_3_4)"],
+        "exp_name": "SD - s5 only"
+    }
+
 }
 
 
