@@ -22,7 +22,7 @@ def get_error(point1, point2):
 
 
 def get_error_heatmap(heatmap1, heatmap2):
-    return np.sqrt(np.average(np.square(heatmap1 - heatmap2)))
+    return np.sqrt(np.sum(np.square(heatmap1 - heatmap2)))
 
 
 # model_manager._image_data_1 = {key: value[0] for key, value in image_data.items()}
@@ -141,7 +141,7 @@ def get_performance(
         heat_map_error = get_error_heatmap(ground_truth_map, heat_map_pred_r)
         # error for best point
         mse_error = get_error(ground_truth_point, pred_index)
-        error_list.append(mse_error)
+        error_list.append(heat_map_error)
         translation_list.append(transformation[translation_type])
         # print("Error for corresponding image from reference image  to image ", i, " is ", error)
 
