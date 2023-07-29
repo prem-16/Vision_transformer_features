@@ -23,6 +23,15 @@ class SDDINOWrapper(ModelWrapperBase):
             "type": "toggle",
             "default": False
         },
+        "raw_layer": {
+            # Options s4 and s5
+            "type": "hidden",
+            "default": "empty"
+        },
+        "mask": {
+            "type": "toggle",
+            "default": False
+        },
         "fuse_dino": {
             "type": "toggle",
             "default": True
@@ -210,27 +219,27 @@ class SDDINOWrapper(ModelWrapperBase):
             with torch.no_grad():
                 # Stable Diffusion
                 if is_dino_only is False:
-                    if is_combine_pca is False:
-                        # Don't use PCA
+                    if kwargs['raw_layer'] != "empty":
+                        image_desc_sd = process_features_and_mask(
+                            self._persistant_cache['sd_model'], self._persistant_cache['sd_aug'],
+                            sd_image, input_text=input_text, mask=False, raw=True
+                        )[kwargs['raw_layer']]
+                    else:
                         # When PCA is True: shape (1, 384, 60, 60)
                         # When PCA is False: shape (1, 1024, 60, 60)
                         image_desc_sd = process_features_and_mask(
                             self._persistant_cache['sd_model'], self._persistant_cache['sd_aug'],
-                            sd_image, input_text=input_text, mask=False, pca=kwargs['pca']
+                            sd_image, input_text=input_text, mask=kwargs['mask'], pca=kwargs['pca']
                         )
-                    else:
-                        # Use PCA
-                        # Shape (1, 768, 60, 60)
-                        image_desc_sd = process_features_and_mask(
-                            self._persistant_cache['sd_model'], self._persistant_cache['sd_aug'],
-                            sd_image, input_text=input_text, mask=False, raw=True
-                        )
-                        image_desc_sd = co_pca_single_image(image_desc_sd, kwargs['pca_dims'])
 
-                    # Reshape (1, descriptor_size, 60, 60) to (1, descriptor_size, num_patches, num_patches)
-                    image_desc_sd = torch.nn.functional.interpolate(
-                        image_desc_sd, (num_patches, num_patches), mode='bilinear'
-                    )
+                    # If we're not using DINO then no need to resize to DINO's num_patches
+                    if is_dino_fuse is False:
+                        num_patches = (image_desc_sd.shape[-2], image_desc_sd.shape[-1])
+                    else:
+                        # Reshape (1, descriptor_size, 60, 60) to (1, descriptor_size, num_patches, num_patches)
+                        image_desc_sd = torch.nn.functional.interpolate(
+                            image_desc_sd, (num_patches, num_patches), mode='bilinear'
+                        )
 
                     # Now perform remaining reshaping operations...
                     image_desc_sd = image_desc_sd.reshape(1, 1, -1, num_patches ** 2).permute(0, 1, 3, 2)
@@ -260,7 +269,7 @@ class SDDINOWrapper(ModelWrapperBase):
                     image_desc = image_desc_sd
 
             return image_desc.cpu(), {
-                "num_patches": dino_extractor.num_patches,
+                "num_patches": num_patches,
                 "load_size": (dino_image.size[1], dino_image.size[0])
             }
 
