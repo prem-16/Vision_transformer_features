@@ -32,10 +32,10 @@ def average_error(model_configs="id_1_1", movement_type="translation_X"):
             f = gzip.open(performance_path + "/" + filename, "rb")
             data = pickle.load(f)
             print(data)
-            x, y = zip(*data)
+            x, heatmap_errors, max_point_errors = zip(*data)
 
             x_list.append(x)
-            y_list.append(y)
+            y_list.append(max_point_errors)
             # plt.plot(x, y)
             # plt.savefig(f"{i}_{model_configs}_{movement_type}")
             # plt.close()
@@ -43,6 +43,9 @@ def average_error(model_configs="id_1_1", movement_type="translation_X"):
 
     print("Number of episodes ", i)
     """Average all episodes y and x values"""
+
+    if len(x_list) == 0:
+        return -1, -1
 
     x_mean = np.mean(x_list, axis=0)
     if movement_type.startswith("rotation"):
@@ -80,7 +83,7 @@ if __name__ == "__main__":
     ]
 
     # Config ids to plot
-    config_ids = ['id_3_3', 'id_3_5']
+    config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_4)', '(id_1_5), (id_1_6)']
     # config_ids = ['id_1_6', 'id_3_2']
     # config_ids = ['id_1_1', 'id_1_1_2']
     # Filter configs by keys that contain a string from configs_ids
@@ -102,7 +105,7 @@ if __name__ == "__main__":
             # plt.ylim(0.1, 0.5)
             plt.xlabel("Change in camera position(absolute value)")
             plt.ylabel("Mean error")
-            plt.legend(loc='upper right', bbox_to_anchor=(1.6, 1.05))
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5,-0.1))
         plt.savefig(f"plots/mean_ALL_MODELS_{transformation}", bbox_inches='tight')
 
         x_mean, y_mean = average_error(model_configs=config_id, movement_type=args.movement)
