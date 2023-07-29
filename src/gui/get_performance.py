@@ -194,6 +194,77 @@ def separate_head_similarity(metric="cosine", head_size=None):
     return metric_func
 
 
+# Define the configs
+# Some configs don't have their own descriptors, but rather will be a concatenation
+# of other descriptors...
+# Be careful!! The first descriptor config id defines the overall concatenated descriptor load_size!
+configs = {
+    "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4"},
+    "(id_1_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 8"},
+    "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11"},
+    "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9"},
+    "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5"},
+    "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD"},
+
+    "(id_1_4)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"],
+        "exp_name": "SD + DINOv1 - stride 4"
+    },
+    "(id_1_5)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"],
+        "exp_name": "SD + DINOv2 - stride 7, layer 11"
+    },
+
+    "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+    "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+    "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
+
+    "(id_1_5_2)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_2_2)", "(id_1_3_2)"],
+        "exp_name": "SD + DINOv2 - stride 7, layer 9"
+    },
+    # Alternative metrics
+    "(id_3_1)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_1)"],
+        "metric": separate_head_similarity(metric="cosine", head_size=6),
+        "exp_name": "DINOv1 - stride 4, per-head cosine similarity"
+    },
+    "(id_3_2)": {
+        "model_name": "OPEN_CLIP",
+        "descriptor_config_ids": ["(id_1_6)"],
+        "metric": "euclidean",
+        "exp_name": "OpenCLIP - euclidean similarity"
+    },
+    "(id_3_3)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_3_2)"],
+        "metric": "euclidean",
+        "exp_name": "SD - euclidean similarity"
+    },
+    "(id_3_4)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_1)"],
+        "metric": "euclidean",
+        "exp_name": "DINOv1 - stride 4, euclidean similarity"
+    },
+    "(id_3_5)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_2)"],
+        "metric": "euclidean",
+        "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
+    },
+
+}
+
+
+def get_output_filename(config_id, config, transformation, episode_id):
+    return f"{config_id}_result_{config['model_name']}_data_{transformation}_episode_{episode_id}.pkl.gzip"
+
+
 if __name__ == '__main__':
     # Use argparse to get the arguments
     arg = argparse.ArgumentParser()
@@ -208,72 +279,6 @@ if __name__ == '__main__':
     # Parse the known arguments
     arg.add_argument('--filter_config', type=str, default=None)
     known_args = arg.parse_known_args()[0]
-
-    # Define the configs
-    # Some configs don't have their own descriptors, but rather will be a concatenation
-    # of other descriptors...
-    # Be careful!! The first descriptor config id defines the overall concatenated descriptor load_size!
-    configs = {
-        "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4"},
-        "(id_1_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 8"},
-        "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11"},
-        "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9"},
-        "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5"},
-        "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD"},
-
-        "(id_1_4)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"],
-            "exp_name": "SD + DINOv1 - stride 4"
-        },
-        "(id_1_5)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"],
-            "exp_name": "SD + DINOv2 - stride 7, layer 11"
-        },
-
-        "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
-        "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
-        "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
-
-        "(id_1_5_2)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_2_2)", "(id_1_3_2)"],
-            "exp_name": "SD + DINOv2 - stride 7, layer 9"
-        },
-        # Alternative metrics
-        "(id_3_1)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_1)"],
-            "metric": separate_head_similarity(metric="cosine", head_size=6),
-            "exp_name": "DINOv1 - stride 4, per-head cosine similarity"
-        },
-        "(id_3_2)": {
-            "model_name": "OPEN_CLIP",
-            "descriptor_config_ids": ["(id_1_6)"],
-            "metric": "euclidean",
-            "exp_name": "OpenCLIP - euclidean similarity"
-        },
-        "(id_3_3)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_3_2)"],
-            "metric": "euclidean",
-            "exp_name": "SD - euclidean similarity"
-        },
-        "(id_3_4)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_1)"],
-            "metric": "euclidean",
-            "exp_name": "DINOv1 - stride 4, euclidean similarity"
-        },
-        "(id_3_5)": {
-            "model_name": "SD_DINO",
-            "descriptor_config_ids": ["(id_1_2)"],
-            "metric": "euclidean",
-            "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
-        },
-
-    }
 
     filter_config = known_args.filter_config
     if filter_config is not None:
@@ -331,9 +336,9 @@ if __name__ == '__main__':
                         os.path.join(known_args.descriptor_dir, descriptor_filename)
                         for descriptor_filename in descriptor_filenames
                     ]
+
                     # Define output file name
-                    output_filename = f"{config_id}_result_{config['model_name']}" \
-                                      f"_data_{transformation}_episode_{episode_id}.pkl.gzip"
+                    output_filename = get_output_filename(config_id, config, transformation, episode_id)
 
                     error, image_point, r = get_performance(
                         model_name=config['model_name'], dataset_name=dataset_file,
