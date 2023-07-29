@@ -129,7 +129,7 @@ class ModelWrapperBase(ABC):
         """
         raise NotImplementedError("Not implemented!")
 
-    def get_heatmap(self, point):
+    def get_heatmap(self, point, temperature=1.0):
         """
         Get heatmap / activation map for the second image.
         Seperate to get_heatmap_vis as this may be overrided.
@@ -145,12 +145,13 @@ class ModelWrapperBase(ABC):
         similarity_map = self._cache['similarities'][0, 0, descriptor_index]
 
         # Softmax the similarity map
-        similarity_map = torch.softmax(similarity_map, dim=0)
+        similarity_map = torch.softmax(similarity_map / temperature, dim=0)
 
         # Normalize the similarity map
         similarity_map = (
             (similarity_map - torch.min(similarity_map)) / (torch.max(similarity_map) - torch.min(similarity_map))
         )
+        similarity_map = similarity_map / torch.sum(similarity_map)
 
         # Convert the similarity map to a heatmap
         heatmap = similarity_map.view(self._cache['num_patches_2']).cpu().numpy()
@@ -159,7 +160,7 @@ class ModelWrapperBase(ABC):
 
     def get_heatmap_vis_from_pil(self, image_2: Image.Image, point, heatmap=None):
         if heatmap is None:
-            heatmap = self.get_heatmap(point)
+            heatmap = self.get_heatmap(point, temperature=0.1)
 
         # Heatmap is numpy array
         # First convert (H, W) to (H, W, 3)

@@ -20,11 +20,13 @@ import pickle
 def get_error(point1, point2):
     return np.sqrt(np.average(np.square(point1 - point2)))
 
+def sanitize_point(point, shape):
+    point = np.array([max(min(int(point[1]), shape[0] - 1), 0), max(min(int(point[0]), shape[1] - 1), 0)])
+    return point
 
 def get_max_error(point, heatmap):
     # Sanitize the point
-    point[1] = max(min(int(point[1]), heatmap.shape[0] - 1), 0)
-    point[0] = max(min(int(point[0]), heatmap.shape[1] - 1), 0)
+    point = sanitize_point(point, heatmap.shape)
 
     # Get the argmax (x, y) of the heatmap
     max_point = np.unravel_index(np.argmax(heatmap, axis=None), heatmap.shape)[:2]
@@ -33,20 +35,17 @@ def get_max_error(point, heatmap):
 
 
 def get_prop_distance_error(point, heatmap):
-    # Sanitize the point
-    point[1] = max(min(int(point[1]), heatmap.shape[0] - 1), 0)
-    point[0] = max(min(int(point[0]), heatmap.shape[1] - 1), 0)
-    # Swap the x and y axis of the point numpy array
-    point = np.array([point[1], point[0]])
+    # Sanitize the point to (y, x)
+    point = sanitize_point(point, heatmap.shape)
 
     # Create reference Euclidean distance map
     indices_y, indices_x = np.indices((heatmap.shape[0], heatmap.shape[1]))
     distance_map = np.sqrt(np.sum((
-            point[:, np.newaxis, np.newaxis] - np.stack((indices_x, indices_y), axis=0)) ** 2
-    ), axis=0)
+            point[:, np.newaxis, np.newaxis] - np.stack((indices_x, indices_y), axis=0)) ** 2, axis=0
+    ))
 
     # Compute the error map
-    error_map = distance_map * heatmap
+    error_map = distance_map.T * heatmap
 
     # Sum the error map
     error = np.sum(error_map)
@@ -107,6 +106,7 @@ def get_performance(
     plt.imshow(reference_image)
     plt.scatter(r[0], r[1], c='r', marker='x', label="Reference point")
     plt.savefig(os.path.join(corr_dir, f"Reference_image_{exp_name}.png"))
+    plt.close()
     # Iterate over remaining images of the sequence
     for i, target_image in enumerate(dataset_data['image_rgb'][0:]):
         # Build the cache for the model
@@ -117,17 +117,18 @@ def get_performance(
         model_manager._dirty = False
         model_manager._image_data_2 = {key: value[i] for key, value in dataset_data.items()}
 
-        # Visualize blend image
-        blend_image, _ = model_manager.selected_model.get_heatmap_vis_from_numpy(target_image, image1_point)
-        blend_image_ = np.array(blend_image)[:, :, :1]
-        pred_index = np.unravel_index(np.argmax(blend_image_, axis=None), blend_image_.shape)[:2]
-        pred_index = (pred_index[1], pred_index[0])
-        plt.imshow(blend_image)
-
         # Visualize correspondences and ground truth
         ground_truth_map = model_manager.create_ground_truth_map((r[0], r[1]))
         ground_truth_point = model_manager._transform_points((r[0], r[1]))
         if i % 5 == 0:
+            plt.figure(0)
+            # Visualize blend image
+            blend_image, heatmap_ = model_manager.selected_model.get_heatmap_vis_from_numpy(target_image, image1_point)
+            heatmap_ = np.array(heatmap_)[:, :, :1]
+            pred_index = np.unravel_index(np.argmax(heatmap_, axis=None), heatmap_.shape)[:2]
+            pred_index = (pred_index[1], pred_index[0])
+            plt.imshow(blend_image)
+
             plt.scatter(pred_index[0], pred_index[1], c='b', marker='x', label=exp_name)
             plt.title(f"Image Correspondence")
             plt.scatter(ground_truth_point[0], ground_truth_point[1], c='r', marker='x', label="Ground truth")
@@ -166,21 +167,21 @@ def get_performance(
         # print(transformation["rotation_X"])
 
         # Compute error
-        heat_map_pred = model_manager.selected_model.get_heatmap(image1_point)
-        assert heat_map_pred.shape == (target_patch_size,target_patch_size) , "Heatmap pred shape is not correct"
+        heat_map_pred = model_manager.selected_model.get_heatmap(image1_point, 0.1)
+        assert heat_map_pred.shape == (target_patch_size, target_patch_size), "Heatmap pred shape is not correct"
         # Resize heatmap
         heat_map_pred_r = torch.nn.functional.interpolate(
             torch.tensor(heat_map_pred).reshape(1, 1, heat_map_pred.shape[0], heat_map_pred.shape[1]),
             reference_image.shape[:2], mode='bilinear'
         ).reshape(reference_image.shape[:2])
-        # One more norm to prevent any increased mass after resize...
-        heat_map_pred_r = (heat_map_pred_r - torch.min(heat_map_pred_r)) / (torch.max(heat_map_pred_r) - torch.min(heat_map_pred_r))
         heat_map_pred_r = heat_map_pred_r.numpy()
+        # One more norm to prevent any increased mass after resize...
+        heat_map_pred_r = heat_map_pred_r / np.sum(heat_map_pred_r)
 
         # Argmax error get_max_error
-        max_point_error = get_max_error(r, heat_map_pred_r)
+        max_point_error = get_max_error(ground_truth_point, heat_map_pred_r)
         # Distance prob error get_prop_distance_error
-        heat_map_error = get_prop_distance_error(r, heat_map_pred_r)
+        heat_map_error = get_prop_distance_error(ground_truth_point, heat_map_pred_r)
         # Append the errors
         error_list_max_point.append(max_point_error)
         error_list_heatmap.append(heat_map_error)
@@ -203,8 +204,22 @@ def get_performance(
     # Capitalize the first letter
     x_label = x_label.capitalize()
 
-    ax.set(xlabel=x_label, ylabel='MSE error', title=f"Error vs {translation_type}")
-    plt.savefig(result_path + f"result_{correspondance_name}.png")
+    ax.set(xlabel=x_label, ylabel='Error', title=f"Heatmap prob dist error for {translation_type}")
+    plt.savefig(result_path + f"heatmap_result_{correspondance_name}.png")
+
+    fig, ax = plt.subplots()
+    ax.plot(translation_list, error_list_max_point)
+
+    # Get the x label
+    x_label = translation_type
+    x_label = translation_type
+    # Remove _ from the label
+    x_label = x_label.replace("_", " ")
+    # Capitalize the first letter
+    x_label = x_label.capitalize()
+
+    ax.set(xlabel=x_label, ylabel='Error', title=f"Euclidean max point error for {translation_type}")
+    plt.savefig(result_path + f"max_point_result_{correspondance_name}.png")
     return list_of_errors, image1_point, r
 
 

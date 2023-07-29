@@ -166,26 +166,3 @@ class DinoVITWrapper(ModelWrapperBase):
         :return: A dictionary of the descriptors, similarities and other information.
         """
         self._cache = self._get_descriptor_similarity(image_dir_1, image_dir_2, settings)
-
-    def get_heatmap(self, point):
-
-        # Get the annotated descriptor index
-        descriptor_index = self._get_descriptor_index_from_point(
-            point, self._cache['num_patches_1']
-        )
-
-        # Filter similarity map to only show the similarity of the annotated descriptor
-        similarity_map = self._cache['similarities'][0, 0, descriptor_index]
-
-        # Softmax the similarity map
-        similarity_map = torch.softmax(similarity_map, dim=0)
-
-        # Normalize the similarity map
-        similarity_map = (
-            (similarity_map - torch.min(similarity_map)) / (torch.max(similarity_map) - torch.min(similarity_map))
-        )
-
-        # Convert the similarity map to a heatmap
-        heatmap = similarity_map.view(self._cache['num_patches_2']).cpu().numpy()
-
-        return heatmap
