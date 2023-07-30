@@ -166,7 +166,8 @@ def plot_per_transform(config_ids, transformations, apply_log, apply_moving_avg,
                          heatmap_errors + heatmap_std_errors,
                 alpha=0.3, color=color
             )
-            plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
+            # Put a legend below current axis
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
             plt.savefig(f"plots/mean_heatmap_{transformation}", bbox_inches='tight')
 
             # PLOT MAX POINT ERROR
@@ -183,7 +184,8 @@ def plot_per_transform(config_ids, transformations, apply_log, apply_moving_avg,
                          max_point_errors + max_point_std_errors,
                 alpha=0.3, color=color
             )
-            plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
+            # Put a legend below current axis
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
             plt.savefig(f"plots/mean_max_point_{transformation}", bbox_inches='tight')
 
         plt.close(fig='all')
@@ -205,34 +207,32 @@ def plot_everything_per_transformation(config_ids, transformations, apply_log, a
 
     # Set the height and width of the figure
     plt.figure(0, figsize=(width, height))
-    plt.title(f"Avg point distance error for all transformations")
+    plt.title(f"Mean point distance for all transformations")
     # Plot the max point error on the y and the categorical transformations on the x
     for exp_name, errors in zip(exp_names, max_point_errors):
         plt.scatter(
             transformations, errors,
-            label=exp_name,
-            marker='x'
+            label=exp_name
         )
     plt.xlabel("Transformation")
     plt.xticks(rotation=-45, ha='left')
-    plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}error")
+    plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}point distance")
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.savefig(f"plots/max_point_all_transformations", bbox_inches='tight')
     plt.close()
 
     # Set the height and width of the figure
     plt.figure(1, figsize=(width, height))
-    plt.title(f"Avg heatmap error for all transformations")
+    plt.title(f"Mean heatmap error for all transformations")
     # Plot the max point error on the y and the categorical transformations on the x
     for exp_name, errors in zip(exp_names, heatmap_errors):
         plt.scatter(
             transformations, errors,
-            label=exp_name,
-            marker='x'
+            label=exp_name
         )
     plt.xlabel("Transformation")
     plt.xticks(rotation=-45, ha='left')
-    plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}error")
+    plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}heatmap error")
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.savefig(f"plots/heatmap_all_transformations", bbox_inches='tight')
 
