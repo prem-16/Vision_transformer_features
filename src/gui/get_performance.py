@@ -20,9 +20,11 @@ import pickle
 def get_error(point1, point2):
     return np.sqrt(np.average(np.square(point1 - point2)))
 
+
 def sanitize_point(point, shape):
     point = np.array([max(min(int(point[1]), shape[0] - 1), 0), max(min(int(point[0]), shape[1] - 1), 0)])
     return point
+
 
 def get_max_error(point, heatmap):
     # Sanitize the point
@@ -41,8 +43,9 @@ def get_prop_distance_error(point, heatmap):
     # Create reference Euclidean distance map
     indices_y, indices_x = np.indices((heatmap.shape[0], heatmap.shape[1]))
     distance_map = np.sqrt(np.sum((
-            point[:, np.newaxis, np.newaxis] - np.stack((indices_x, indices_y), axis=0)) ** 2, axis=0
-    ))
+                                          point[:, np.newaxis, np.newaxis] - np.stack((indices_x, indices_y),
+                                                                                      axis=0)) ** 2, axis=0
+                                  ))
 
     # Compute the error map
     error_map = distance_map.T * heatmap
@@ -95,7 +98,7 @@ def get_performance(
         "rotation_Y": [],
         "rotation_Z": [],
     }
-    target_patch_size =100
+    target_patch_size = 100
     model_manager.build_super_cache(pkl_paths=descriptor_paths, target_num_patches=target_patch_size)
     # correspondance name for storing image
     correspondance_name = output_filename.replace(".pkl.gzip", "")
@@ -120,12 +123,24 @@ def get_performance(
         # Visualize correspondences and ground truth
         ground_truth_map = model_manager.create_ground_truth_map((r[0], r[1]))
         ground_truth_point = model_manager._transform_points((r[0], r[1]))
+
+        # Compute error
+        heat_map_pred = model_manager.selected_model.get_heatmap(image1_point, 0.1)
+        assert heat_map_pred.shape == (target_patch_size, target_patch_size), "Heatmap pred shape is not correct"
+        # Resize heatmap
+        heat_map_pred_r = torch.nn.functional.interpolate(
+            torch.tensor(heat_map_pred).reshape(1, 1, heat_map_pred.shape[0], heat_map_pred.shape[1]),
+            reference_image.shape[:2], mode='bilinear'
+        ).reshape(reference_image.shape[:2])
+        heat_map_pred_r = heat_map_pred_r.numpy()
         if i % 5 == 0:
             plt.figure(0)
             # Visualize blend image
-            blend_image, heatmap_ = model_manager.selected_model.get_heatmap_vis_from_numpy(target_image, image1_point)
-            heatmap_ = np.array(heatmap_)[:, :, :1]
-            pred_index = np.unravel_index(np.argmax(heatmap_, axis=None), heatmap_.shape)[:2]
+            blend_image, _ = model_manager.selected_model.get_heatmap_vis_from_numpy(target_image, image1_point)
+
+            # Compute error
+
+            pred_index = np.unravel_index(np.argmax(heat_map_pred_r, axis=None), heat_map_pred_r.shape)[:2]
             pred_index = (pred_index[1], pred_index[0])
             plt.imshow(blend_image)
 
@@ -166,15 +181,6 @@ def get_performance(
         # print(transformation["rotation_Y"])
         # print(transformation["rotation_X"])
 
-        # Compute error
-        heat_map_pred = model_manager.selected_model.get_heatmap(image1_point, 0.1)
-        assert heat_map_pred.shape == (target_patch_size, target_patch_size), "Heatmap pred shape is not correct"
-        # Resize heatmap
-        heat_map_pred_r = torch.nn.functional.interpolate(
-            torch.tensor(heat_map_pred).reshape(1, 1, heat_map_pred.shape[0], heat_map_pred.shape[1]),
-            reference_image.shape[:2], mode='bilinear'
-        ).reshape(reference_image.shape[:2])
-        heat_map_pred_r = heat_map_pred_r.numpy()
         # One more norm to prevent any increased mass after resize...
         heat_map_pred_r = heat_map_pred_r / np.sum(heat_map_pred_r)
 
@@ -278,6 +284,8 @@ configs = {
 
     "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
     "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+    "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only"},
+    "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only"},
     "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
 
     "(id_1_5_2)": {
@@ -327,7 +335,36 @@ configs = {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_3_4)"],
         "exp_name": "SD - s5 only"
-    }
+    },
+    "(id_1_6_2)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_6)", "(id_1_3_4)"],
+        "exp_name": "SD + OpenCLIP - s5 only "
+    },
+    #Add more SD experiments
+    "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only"},
+    "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only"},
+
+    # Add more OpenClip + SD
+    "(id_1_6_2)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_6)", "(id_1_3_4)"],
+        "exp_name": "SD + OpenCLIP - s5 only "
+    },
+
+    #SD + DINOv1
+    "(id_1_4_2)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_1)", "(id_1_3_4)"],
+        "exp_name": "SD + DINOv1 - stride 4, s5 only"
+    },
+    # SD + DINOv2
+    "(id_1_5_3)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_2_3)", "(id_1_3_4)"],
+        "exp_name": "SD + DINOv2 - stride 7, layer 5, s5 only"
+    },
+
 
 }
 
