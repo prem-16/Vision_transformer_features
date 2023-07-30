@@ -1,6 +1,7 @@
 import argparse
 import traceback
 
+import matplotlib
 import matplotlib.pyplot as plt
 import sys
 import cv2
@@ -263,96 +264,117 @@ def separate_head_similarity(metric="cosine", head_size=None):
 # Some configs don't have their own descriptors, but rather will be a concatenation
 # of other descriptors...
 # Be careful!! The first descriptor config id defines the overall concatenated descriptor load_size!
+
+model_categories = ['DINOv1', 'DINOv2', 'SD', 'OpenCLIP', 'SD_COMB']
+cmap = matplotlib.colormaps.get_cmap('Pastel2')
+colors = cmap(np.linspace(0, 1, len(model_categories)))
+model_color_categories = {
+    model_name: color for model_name, color in zip(model_categories, colors)
+}
+config_color = {
+    model_name: color for model_name, color in zip(model_categories, colors)
+}
+
 configs = {
-    "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4"},
-    "(id_1_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 8"},
-    "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11"},
-    "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9"},
-    "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5"},
-    "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD"},
+    "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4", "category": "DINOv1"},
+    "(id_1_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 8", "category": "DINOv1"},
+    "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11", "category": "DINOv2"},
+    "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9", "category": "DINOv2"},
+    "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5", "category": "DINOv2"},
+    "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD", "category": "SD"},
 
     "(id_1_4)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_1)", "(id_1_3_2)"],
-        "exp_name": "SD + DINOv1 - stride 4"
+        "exp_name": "SD + DINOv1 - stride 4", "category": "SD_COMB",
     },
     "(id_1_5)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_2)", "(id_1_3_2)"],
-        "exp_name": "SD + DINOv2 - stride 7, layer 11"
+        "exp_name": "SD + DINOv2 - stride 7, layer 11", "category": "SD_COMB",
     },
 
-    "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+    "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP", "category": "OpenCLIP"},
     "(id_1_6_2)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_6)", "(id_1_3_4)"],
-        "exp_name": "SD + OpenCLIP - s5 only "
+        "exp_name": "SD + OpenCLIP - s5 only ", "category": "SD_COMB",
     },
-    "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
-    "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only"},
-    "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only"},
-    "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions"},
+    "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP", "category": "OpenCLIP"},
+    "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only", "category": "SD"},
+    "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only", "category": "SD"},
+    "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions", "category": "SD"},
 
     "(id_1_5_2)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_2_2)", "(id_1_3_2)"],
-        "exp_name": "SD + DINOv2 - stride 7, layer 9"
+        "exp_name": "SD + DINOv2 - stride 7, layer 9",
+        "category": "SD_COMB"
     },
     # Alternative metrics
     "(id_3_1)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_1)"],
         "metric": separate_head_similarity(metric="cosine", head_size=6),
-        "exp_name": "DINOv1 - stride 4, per-head cosine similarity"
+        "exp_name": "DINOv1 - stride 4, per-head cosine similarity",
+        "category": "DINOv1"
     },
     "(id_3_2)": {
         "model_name": "OPEN_CLIP",
         "descriptor_config_ids": ["(id_1_6)"],
         "metric": "euclidean",
-        "exp_name": "OpenCLIP - euclidean similarity"
+        "exp_name": "OpenCLIP - euclidean similarity",
+        "category": "OpenCLIP"
     },
     "(id_3_3)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_3_2)"],
         "metric": "euclidean",
-        "exp_name": "SD - euclidean similarity"
+        "exp_name": "SD - euclidean similarity",
+        "category": "SD"
     },
     "(id_3_4)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_1)"],
         "metric": "euclidean",
-        "exp_name": "DINOv1 - stride 4, euclidean similarity"
+        "exp_name": "DINOv1 - stride 4, euclidean similarity",
+        "category": "DINOv1"
     },
     "(id_3_5)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_2)"],
         "metric": "euclidean",
-        "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity"
+        "exp_name": "DINOv2 - stride 7, layer 11, euclidean similarity",
+        "category": "DINOv2"
     },
 
     # More SD experiments
     "(id_1_3_3)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_3_3)"],
-        "exp_name": "SD - s4 only"
+        "exp_name": "SD - s4 only",
+        "category": "SD"
     },
     "(id_1_3_4)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_3_4)"],
-        "exp_name": "SD - s5 only"
+        "exp_name": "SD - s5 only",
+        "category": "SD"
     },
 
     #SD + DINOv1
     "(id_1_4_2)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_1)", "(id_1_3_4)"],
-        "exp_name": "SD + DINOv1 - stride 4, s5 only"
+        "exp_name": "SD + DINOv1 - stride 4, s5 only",
+        "category": "SD_COMB"
     },
     # SD + DINOv2
     "(id_1_5_3)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_2_3)", "(id_1_3_4)"],
-        "exp_name": "SD + DINOv2 - stride 7, layer 5, s5 only"
+        "exp_name": "SD + DINOv2 - stride 7, layer 5, s5 only",
+        "category": "SD_COMB"
     },
 
 
