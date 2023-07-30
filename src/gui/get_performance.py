@@ -283,6 +283,11 @@ configs = {
     },
 
     "(id_1_6)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
+    "(id_1_6_2)": {
+        "model_name": "SD_DINO",
+        "descriptor_config_ids": ["(id_1_6)", "(id_1_3_4)"],
+        "exp_name": "SD + OpenCLIP - s5 only "
+    },
     "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP"},
     "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only"},
     "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only"},
@@ -335,21 +340,6 @@ configs = {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_3_4)"],
         "exp_name": "SD - s5 only"
-    },
-    "(id_1_6_2)": {
-        "model_name": "SD_DINO",
-        "descriptor_config_ids": ["(id_1_6)", "(id_1_3_4)"],
-        "exp_name": "SD + OpenCLIP - s5 only "
-    },
-    #Add more SD experiments
-    "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only"},
-    "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only"},
-
-    # Add more OpenClip + SD
-    "(id_1_6_2)": {
-        "model_name": "SD_DINO",
-        "descriptor_config_ids": ["(id_1_6)", "(id_1_3_4)"],
-        "exp_name": "SD + OpenCLIP - s5 only "
     },
 
     #SD + DINOv1
