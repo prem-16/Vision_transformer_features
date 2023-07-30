@@ -86,12 +86,16 @@ if __name__ == "__main__":
         "translation_Z"
     ]
 
-    # Config ids to plot
-    # config_ids = ['id_3_3', 'id_3_5']
+    # VARIABLES
+    APPLY_LOG = False
+    APPLY_MOVING_AVG = True
+
+    # FILTER CONFIGS BY ID. MAKE SURE TO USE ( )
+    # SD Model comparison
+    config_ids = ['(id_1_3_2)', '(id_1_3_3)', '(id_1_3_4)', '(id_3_3)']
     # config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_4)', '(id_1_5), (id_1_6)']
     # config_ids = ['id_1_6', 'id_3_2']
-    config_ids = ['id_2_1', 'id_1_4']
-    config_ids = ['id_1_2']
+    # config_ids = ['id_2_1', 'id_1_4']
     #config_ids = ['id_1_4', 'id_1_1_2']
     # Filter configs by keys that contain a string from configs_ids
     configs = {k: v for k, v in configs.items() if any(x in k for x in config_ids)}
@@ -99,31 +103,52 @@ if __name__ == "__main__":
     for transformation in transformations:
         print(transformation)
 
-        plt.figure()
         for config_id, config in configs.items():
             print(config_id)
 
-            x_mean, heatmap_error_mean, max_point_error_mean ,heatmap_error_std ,max_point_error_std = \
+            x_mean, heatmap_error_mean, max_point_error_mean, heatmap_error_std, max_point_error_std = \
                 average_error(model_configs=config_id, movement_type=transformation)
 
-            heatmap_error_mean_av = movingaverage(np.log(heatmap_error_mean), 1)
+            if APPLY_LOG:
+                heatmap_error_mean = np.log(heatmap_error_mean)
+                max_point_error_mean = np.log(max_point_error_mean)
 
-            plt.title(f"{transformation}")
+            if APPLY_MOVING_AVG:
+                heatmap_error_mean_av = movingaverage(heatmap_error_mean, 1)
+                max_point_error_mean_av = movingaverage(max_point_error_mean, 1)
+            else:
+                heatmap_error_mean_av = heatmap_error_mean
+                max_point_error_mean_av = max_point_error_mean
+
+            # PLOT HEATMAP ERROR
+            plt.figure(0)
+            plt.title(f"Avg error for transformation - {transformation}")
             plt.plot(x_mean,
-                     heatmap_error_mean, label=config["exp_name"])
-            #plt.xlim(-.2, 0.2)
-            # plt.ylim(0.1, 0.5)
+                     heatmap_error_mean_av, label=config["exp_name"])
             plt.xlabel("Change in camera position(absolute value)")
-            plt.ylabel("Mean error")
-           # plt.fill_between(x_mean, heatmap_error_mean_av - heatmap_error_std, heatmap_error_mean_av + heatmap_error_std, alpha=0.3)
+            plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}heatmap error")
+            plt.fill_between(
+                x_mean, heatmap_error_mean_av - heatmap_error_std,
+                heatmap_error_mean_av + heatmap_error_std,
+                alpha=0.3
+            )
             plt.legend(loc='upper right', bbox_to_anchor=(1.6, 1.05))
-        plt.savefig(f"plots/mean_ALL_MODELS_{transformation}", bbox_inches='tight')
+            plt.savefig(f"plots/mean_heatmap_{transformation}", bbox_inches='tight')
 
+            # PLOT MAX POINT ERROR
+            plt.figure(1)
+            plt.title(f"Avg error for transformation - {transformation}")
+            plt.plot(x_mean,
+                     max_point_error_mean_av, label=config["exp_name"])
+            plt.xlabel("Change in camera position(absolute value)")
+            plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}predicted keypoint distance")
+            plt.fill_between(
+                x_mean, max_point_error_mean_av - max_point_error_std,
+                max_point_error_mean_av + max_point_error_std,
+                alpha=0.3
+            )
+            plt.legend(loc='upper right', bbox_to_anchor=(1.6, 1.05))
+            plt.savefig(f"plots/mean_max_point_{transformation}", bbox_inches='tight')
 
-
-
-
-
-
-
+        plt.close(fig='all')
     # plt.savefig(f"plots/mean_ALL_MODELS_{args.movement}")
