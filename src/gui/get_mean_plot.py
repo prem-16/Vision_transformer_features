@@ -233,7 +233,7 @@ def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, st
     heatmap_errors = np.mean(heatmap_errors_all, axis=-1).mean(axis=0)
     width = 5
     height = 5
-    exp_names = [config['exp_name'].replace("- ", "\n") for _, config in configs.items()]
+    exp_names = [config['exp_name'] for _, config in configs.items()]
     # Gradually colour the bars using a colour map
     cmap = matplotlib.colormaps.get_cmap('Pastel2')
     colors = cmap(np.linspace(0, 1, len(exp_names)))
@@ -241,26 +241,24 @@ def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, st
     # Order the errors and exp_names by max point error
     max_point_errors, heatmaps_errors, exp_names = zip(*sorted(zip(max_point_errors, heatmap_errors, exp_names)))
 
-    fig, ax = plt.subplots(figsize=(width, height))
+    plt.figure(1)
     # Set the height and width of the figure
-    # ax.figure(figsize=(width, height))
+    plt.figure(figsize=(width, height))
+    plt.title(f"Avg keypoint distance for all transformations")
     # Plot the max point error on the y and the categorical transformations on the x
-    ax.bar(exp_names, max_point_errors, color=colors)
-    ax.set_title(f"Avg point distance error for all transformations")
-    ax.set_xlabel("Transformation")
-    # Rotate the x labels 90 degrees and offset them to the left
-    # ax.set_xticks(rotation=-90, ha='left', rotation_mode="anchor", x=1)
+    plt.bar(exp_names, max_point_errors, color=colors)
+    plt.xlabel("Transformation")
 
-    plt.setp(ax.xaxis.get_majorticklabels(), rotation=90, ha='left', rotation_mode="anchor", x=1)
-    # Create offset transform by 5 points in x direction
-    offset = matplotlib.transforms.ScaledTranslation(5 / 72., 0 / 72., fig.dpi_scale_trans)
-    # apply offset transform to all x ticklabels.
-    for label in ax.xaxis.get_majorticklabels():
-        label.set_transform(label.get_transform() + offset)
+    plt.xticks(
+        rotation=45,
+        horizontalalignment='right',
+        fontweight='light',
+        fontsize='x-small'
+    )
 
-    ax.set_ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}distance error")
-    fig.savefig(f"plots/max_point_all", bbox_inches='tight')
-    fig.close()
+    plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}keypoint distance")
+    plt.savefig(f"plots/max_point_all", bbox_inches='tight')
+    plt.close()
 
     # Order the errors and exp_names by heatmap error
     heatmap_errors, max_point_errors, exp_names = zip(*sorted(zip(heatmap_errors, max_point_errors, exp_names)))
@@ -272,7 +270,14 @@ def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, st
     # Plot the max point error on the y and the categorical transformations on the x
     plt.bar(exp_names, heatmap_errors, color=colors)
     plt.xlabel("Transformation")
-    plt.xticks(rotation=-90, ha='left')
+
+    plt.xticks(
+        rotation=45,
+        horizontalalignment='right',
+        fontweight='light',
+        fontsize='x-small'
+    )
+
     plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}heatmap error")
     plt.savefig(f"plots/heatmap_all", bbox_inches='tight')
     plt.close()
@@ -294,25 +299,25 @@ if __name__ == "__main__":
     ]
 
     # VARIABLES
-    APPLY_LOG = False
+    APPLY_LOG = True
     APPLY_MOVING_AVG = True
     STD_SCALE = 0.5
     LOG_STD_SCALE = 0.1
 
     # FILTER CONFIGS BY ID. MAKE SURE TO USE ( )
     # SD Model comparison
-    config_ids = ['(id_1_3_2)', '(id_1_3_3)', '(id_1_3_4)', '(id_3_3)']
+    # config_ids = ['(id_1_3_2)', '(id_1_3_3)', '(id_1_3_4)', '(id_3_3)']
     # DINOv1, DINOv2, SD + DINOv1, SD + DINOv2, OpenClip
     # config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_2_3)', '(id_1_4)', '(id_1_5)', '(id_1_6)']
-    # config_ids = [config_id for config_id in configs.keys() if config_id not in [
-    #     '(id_1_7)', '(id_1_6_2)', '(id_2_2)', '(id_2_3)', '(id_1_4_2)', '(id_1_5_3)'
-    # ]]
+    config_ids = [config_id for config_id in configs.keys() if config_id not in [
+        '(id_1_7)', '(id_1_6_2)', '(id_2_2)', '(id_2_3)', '(id_1_4_2)', '(id_1_5_3)'
+    ]]
 
     # Plot per transform
     # plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
 
     # Aggregate everything for each transform
-    plot_everything_per_transformation(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
+    # plot_everything_per_transformation(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
 
     # Aggregate everything
-    # plot_everything(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
+    plot_everything(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
