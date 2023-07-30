@@ -63,7 +63,7 @@ def moving_average(interval, window_size):
     return np.convolve(interval, window, 'same')
 
 
-def gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale):
+def gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
     # Get the configs
     from src.gui.get_performance import configs
     if config_ids is not None:
@@ -91,11 +91,13 @@ def gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_sc
                     average_error(model_configs=config_id, movement_type=transformation)
 
                 if apply_log:
-                    heatmap_error_mean = np.log(heatmap_error_mean)
-                    max_point_error_mean = np.log(max_point_error_mean)
-                    heatmap_error_std = np.log(heatmap_error_std) * log_std_scale
-                    max_point_error_std = np.log(max_point_error_std) * log_std_scale
+                    heatmap_error_mean = np.log(heatmap_error_mean / img_size)
+                    max_point_error_mean = np.log(max_point_error_mean / img_size)
+                    heatmap_error_std = np.log(heatmap_error_std / img_size) * log_std_scale
+                    max_point_error_std = np.log(max_point_error_std / img_size) * log_std_scale
                 else:
+                    heatmap_error_mean /= img_size
+                    max_point_error_mean /= img_size
                     heatmap_error_std = heatmap_error_std * std_scale
                     max_point_error_std = max_point_error_std * std_scale
 
@@ -129,9 +131,9 @@ def gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_sc
         np.array(max_point_std_errors_per_transformation)
 
 
-def plot_per_transform(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale):
+def plot_per_transform(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
     configs, x_means_all, heatmap_errors_all, max_point_errors_all, heatmap_std_errors_all, max_point_std_errors_all = \
-        gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale)
+        gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size)
 
     print("Creating plots data...")
     for config, transformation, x_means_per_t, heatmap_errors_per_t, max_point_errors_per_t, \
@@ -177,9 +179,9 @@ def plot_per_transform(config_ids, transformations, apply_log, apply_moving_avg,
         plt.close(fig='all')
 
 
-def plot_everything_per_transformation(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale):
+def plot_everything_per_transformation(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
     configs, _, heatmap_errors_all, max_point_errors_all, heatmap_std_errors_all, max_point_std_errors_all = \
-        gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale)
+        gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size)
 
     max_point_errors = np.mean(max_point_errors_all, axis=-1)
     heatmap_errors = np.mean(heatmap_errors_all, axis=-1)
@@ -227,9 +229,9 @@ def plot_everything_per_transformation(config_ids, transformations, apply_log, a
     plt.savefig(f"plots/heatmap_all_transformations", bbox_inches='tight')
 
 
-def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale):
+def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
     configs, _, heatmap_errors_all, max_point_errors_all, heatmap_std_errors_all, max_point_std_errors_all = \
-        gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale)
+        gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size)
 
     max_point_errors = np.mean(max_point_errors_all, axis=-1).mean(axis=0)
     heatmap_errors = np.mean(heatmap_errors_all, axis=-1).mean(axis=0)
@@ -248,50 +250,46 @@ def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, st
     # Order the errors and exp_names by max point error
     max_point_errors, heatmaps_errors, exp_names, colors = \
         zip(*sorted(zip(max_point_errors, heatmap_errors, exp_names, colors)))
-
     plt.figure(1)
     # Set the height and width of the figure
     plt.figure(figsize=(width, height))
-    plt.title(f"Avg keypoint distance for all transformations")
+    plt.title(f"Mean keypoint distance over all transformations")
     # Plot the max point error on the y and the categorical transformations on the x
     plt.bar(exp_names, max_point_errors, color=colors)
     plt.xlabel("Model")
-
     plt.xticks(
         rotation=45,
         horizontalalignment='right',
         fontweight='light',
         fontsize='x-small'
     )
-
-    plt.legend(handles=handles)
-
+    plt.legend(handles=handles, loc='upper left')
     plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}keypoint distance")
+    plt.ylim(2, 6)
+    plt.gcf().set_dpi(300)
     plt.savefig(f"plots/max_point_all", bbox_inches='tight')
     plt.close()
 
     # Order the errors and exp_names by heatmap error
     heatmap_errors, max_point_errors, exp_names, colors = \
         zip(*sorted(zip(heatmap_errors, max_point_errors, exp_names, colors)))
-
     plt.figure(1)
     # Set the height and width of the figure
     plt.figure(figsize=(width, height))
-    plt.title(f"Avg heatmap error for all transformations")
+    plt.title(f"Mean heatmap error over all transformations")
     # Plot the max point error on the y and the categorical transformations on the x
     plt.bar(exp_names, heatmap_errors, color=colors)
     plt.xlabel("Model")
-
     plt.xticks(
         rotation=45,
         horizontalalignment='right',
         fontweight='light',
         fontsize='x-small'
     )
-
-    plt.legend(handles=handles)
-
+    plt.legend(handles=handles, loc='upper left')
     plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}heatmap error")
+    plt.ylim(4, 6)
+    plt.gcf().set_dpi(300)
     plt.savefig(f"plots/heatmap_all", bbox_inches='tight')
     plt.close()
 
@@ -316,6 +314,8 @@ if __name__ == "__main__":
     APPLY_MOVING_AVG = True
     STD_SCALE = 0.5
     LOG_STD_SCALE = 0.1
+    # IMG_SIZE = 512
+    IMG_SIZE = 1
 
     # FILTER CONFIGS BY ID. MAKE SURE TO USE ( )
     # SD Model comparison
@@ -323,14 +323,14 @@ if __name__ == "__main__":
     # DINOv1, DINOv2, SD + DINOv1, SD + DINOv2, OpenClip
     # config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_2_3)', '(id_1_4)', '(id_1_5)', '(id_1_6)']
     config_ids = [config_id for config_id in configs.keys() if config_id not in [
-        '(id_1_7)', '(id_1_6_2)', '(id_2_2)', '(id_2_3)', '(id_1_4_2)', '(id_1_5_3)'
+        '(id_1_7)', '(id_1_6_2)', '(id_2_2)', '(id_2_3)', '(id_3_2)', '(id_3_3)', '(id_3_4)', '(id_3_5)'
     ]]
 
     # Plot per transform
-    # plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
+    # plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
 
     # Aggregate everything for each transform
-    # plot_everything_per_transformation(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
+    # plot_everything_per_transformation(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
 
     # Aggregate everything
-    plot_everything(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
+    plot_everything(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
