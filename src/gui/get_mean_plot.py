@@ -141,39 +141,49 @@ def plot_per_transform(config_ids, transformations, apply_log, apply_moving_avg,
         configs, transformations, x_means_all, heatmap_errors_all, max_point_errors_all,
         heatmap_std_errors_all, max_point_std_errors_all
     )):
+
+        # Get pastel colours
+        cmap = matplotlib.colormaps.get_cmap('tab20')
+        colors = cmap(np.linspace(0, 1, len(configs)))
+
         for (config_id, config), x_means, heatmap_errors, max_point_errors, \
-                heatmap_std_errors, max_point_std_errors in zip(
+                heatmap_std_errors, max_point_std_errors, color in zip(
             configs.items(), x_means_per_t, heatmap_errors_per_t, max_point_errors_per_t,
-            heatmap_std_errors_per_t, max_point_std_errors_per_t
+            heatmap_std_errors_per_t, max_point_std_errors_per_t, colors
         ):
+
             # PLOT HEATMAP ERROR
             plt.figure(0)
-            plt.title(f"Avg error for transformation - {transformation}")
-            plt.plot(x_means,
-                     heatmap_errors, label=config["exp_name"])
+            plt.title(f"Mean heatmap error for transformation - {transformation}")
+            plt.plot(
+                x_means, heatmap_errors,
+                label=config["exp_name"], color=color
+            )
             plt.xlabel("Change in camera position(absolute value)")
             plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}heatmap error")
             plt.fill_between(
                 x_means, heatmap_errors - heatmap_std_errors,
                          heatmap_errors + heatmap_std_errors,
-                alpha=0.3
+                alpha=0.3, color=color
             )
-            plt.legend(loc='upper right', bbox_to_anchor=(1.6, 1.05))
+            plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
             plt.savefig(f"plots/mean_heatmap_{transformation}", bbox_inches='tight')
 
             # PLOT MAX POINT ERROR
             plt.figure(1)
-            plt.title(f"Avg error for transformation - {transformation}")
-            plt.plot(x_means,
-                     max_point_errors, label=config["exp_name"])
+            plt.title(f"Mean keypoint distance for transformation {transformation}")
+            plt.plot(
+                x_means, max_point_errors,
+                label=config["exp_name"], color=color
+            )
             plt.xlabel("Change in camera position(absolute value)")
-            plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}predicted keypoint distance")
+            plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')} keypoint distance")
             plt.fill_between(
                 x_means, max_point_errors - max_point_std_errors,
                          max_point_errors + max_point_std_errors,
-                alpha=0.3
+                alpha=0.3, color=color
             )
-            plt.legend(loc='upper right', bbox_to_anchor=(1.6, 1.05))
+            plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
             plt.savefig(f"plots/mean_max_point_{transformation}", bbox_inches='tight')
 
         plt.close(fig='all')
@@ -188,14 +198,13 @@ def plot_everything_per_transformation(config_ids, transformations, apply_log, a
     # Switch around the axes
     max_point_errors = np.swapaxes(max_point_errors, 0, 1)
     heatmap_errors = np.swapaxes(heatmap_errors, 0, 1)
-    width = 5
+    width = 4
     height = 5
     transformations = [transformation.replace("_", " ").capitalize() for transformation in transformations]
     exp_names = [config['exp_name'].replace("- ", "\n") for _, config in configs.items()]
 
-    plt.figure(0)
     # Set the height and width of the figure
-    plt.figure(figsize=(width, height))
+    plt.figure(0, figsize=(width, height))
     plt.title(f"Avg point distance error for all transformations")
     # Plot the max point error on the y and the categorical transformations on the x
     for exp_name, errors in zip(exp_names, max_point_errors):
@@ -211,9 +220,8 @@ def plot_everything_per_transformation(config_ids, transformations, apply_log, a
     plt.savefig(f"plots/max_point_all_transformations", bbox_inches='tight')
     plt.close()
 
-    plt.figure(1)
     # Set the height and width of the figure
-    plt.figure(figsize=(width, height))
+    plt.figure(1, figsize=(width, height))
     plt.title(f"Avg heatmap error for all transformations")
     # Plot the max point error on the y and the categorical transformations on the x
     for exp_name, errors in zip(exp_names, heatmap_errors):
@@ -265,7 +273,7 @@ def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, st
     )
     plt.legend(handles=handles, loc='upper left')
     plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}keypoint distance")
-    plt.ylim(2, 6)
+    plt.ylim(1, 6)
     plt.gcf().set_dpi(300)
     plt.savefig(f"plots/max_point_all", bbox_inches='tight')
     plt.close()
@@ -288,7 +296,7 @@ def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, st
     )
     plt.legend(handles=handles, loc='upper left')
     plt.ylabel(f"Mean {('(log) ' if APPLY_LOG else '')}heatmap error")
-    plt.ylim(4, 6)
+    plt.ylim(3.5, 5.5)
     plt.gcf().set_dpi(300)
     plt.savefig(f"plots/heatmap_all", bbox_inches='tight')
     plt.close()
@@ -300,6 +308,23 @@ if __name__ == "__main__":
     parser.add_argument("--movement", type=str, default="translation_X")
     args = parser.parse_args()
 
+    # VARIABLES
+    APPLY_LOG = True
+    APPLY_MOVING_AVG = False
+    STD_SCALE = 0.5
+    LOG_STD_SCALE = 0.1
+    # IMG_SIZE = 512
+    IMG_SIZE = 1
+
+    transformations = [
+        "rotation_Z",
+        "translation_Z"
+    ]
+    # DINOv1, DINOv2, SD + DINOv1, SD + DINOv2, OpenClip
+    config_ids = ['(id_1_1)', '(id_1_2_3)', '(id_1_6)', '(id_1_3_4)', '(id_1_4_2)', '(id_1_5_3)']
+    # Plot per transform
+    plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
+
     transformations = [
         "rotation_X",
         "rotation_Y",
@@ -308,29 +333,23 @@ if __name__ == "__main__":
         "translation_Y",
         "translation_Z"
     ]
+    config_ids = ['(id_1_1)', '(id_1_2_3)', '(id_1_6)', '(id_1_3_4)', '(id_1_4_2)', '(id_1_5_3)']
+    # Aggregate everything for each transform
+    plot_everything_per_transformation(
+        config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE
+    )
 
-    # VARIABLES
-    APPLY_LOG = True
-    APPLY_MOVING_AVG = True
-    STD_SCALE = 0.5
-    LOG_STD_SCALE = 0.1
-    # IMG_SIZE = 512
-    IMG_SIZE = 1
-
-    # FILTER CONFIGS BY ID. MAKE SURE TO USE ( )
-    # SD Model comparison
-    # config_ids = ['(id_1_3_2)', '(id_1_3_3)', '(id_1_3_4)', '(id_3_3)']
-    # DINOv1, DINOv2, SD + DINOv1, SD + DINOv2, OpenClip
-    # config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_2_3)', '(id_1_4)', '(id_1_5)', '(id_1_6)']
+    transformations = [
+        "rotation_X",
+        "rotation_Y",
+        "rotation_Z",
+        "translation_X",
+        "translation_Y",
+        "translation_Z"
+    ]
+    # EVERYTHING
     config_ids = [config_id for config_id in configs.keys() if config_id not in [
         '(id_1_7)', '(id_1_6_2)', '(id_2_2)', '(id_2_3)', '(id_3_2)', '(id_3_3)', '(id_3_4)', '(id_3_5)'
     ]]
-
-    # Plot per transform
-    # plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
-
-    # Aggregate everything for each transform
-    # plot_everything_per_transformation(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
-
     # Aggregate everything
     plot_everything(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)

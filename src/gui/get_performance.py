@@ -281,7 +281,7 @@ configs = {
     "(id_1_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 11", "category": "DINOv2"},
     "(id_1_2_2)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 9", "category": "DINOv2"},
     "(id_1_2_3)": {"model_name": "SD_DINO", "exp_name": "DINOv2 - stride 7, layer 5", "category": "DINOv2"},
-    "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD", "category": "SD"},
+    "(id_1_3_2)": {"model_name": "SD_DINO", "exp_name": "SD - pca", "category": "SD"},
 
     "(id_1_4)": {
         "model_name": "SD_DINO",
