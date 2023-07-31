@@ -16,6 +16,7 @@ image_directory = "images/test_images"
 import os
 import gzip
 import pickle
+import seaborn as sns
 
 
 def get_error(point1, point2):
@@ -137,12 +138,18 @@ def get_performance(
         if i % 5 == 0:
             plt.figure(0)
             # Visualize blend image
-            blend_image, _ = model_manager.selected_model.get_heatmap_vis_from_numpy(target_image, image1_point)
+            blend_image, ht_map = model_manager.selected_model.get_heatmap_vis_from_numpy(target_image, image1_point)
 
             # Compute error
+            plt.figure(0)
+            plt.imshow(ht_map)
+            svm = sns.heatmap(heat_map_pred_r)
+            figure = svm.get_figure()
+            figure.savefig(os.path.join(corr_dir, f"heatmap_{i}_{correspondance_name}.png"))
 
             pred_index = np.unravel_index(np.argmax(heat_map_pred_r, axis=None), heat_map_pred_r.shape)[:2]
             pred_index = (pred_index[1], pred_index[0])
+            plt.figure(1)
             plt.imshow(blend_image)
 
             plt.scatter(pred_index[0], pred_index[1], c='b', marker='x', label=exp_name)
@@ -302,7 +309,7 @@ configs = {
     },
     "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP", "category": "OpenCLIP"},
     "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only", "category": "SD"},
-    "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only", "category": "SD"},
+
     "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions", "category": "SD"},
 
     "(id_1_5_2)": {
@@ -362,7 +369,7 @@ configs = {
         "category": "SD"
     },
 
-    #SD + DINOv1
+    # SD + DINOv1
     "(id_1_4_2)": {
         "model_name": "SD_DINO",
         "descriptor_config_ids": ["(id_1_1)", "(id_1_3_4)"],
@@ -376,7 +383,12 @@ configs = {
         "exp_name": "SD + DINOv2 - stride 7, layer 5, s5 only",
         "category": "SD_COMB"
     },
-
+    "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only", "category": "SD"},
+    "(id_1_4_3)": {
+        "model_name": "SD + DINOv2 - stride 7, layer 5, s5 only, with captions",
+        "descriptor_config_ids": ["(id_1_2_3)", "(id_2_3)"],
+        "category": "SD"
+    },
 
 }
 

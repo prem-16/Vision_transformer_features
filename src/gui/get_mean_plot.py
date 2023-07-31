@@ -330,7 +330,7 @@ if __name__ == "__main__":
     # plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
 
     # Aggregate everything for each transform
-    # plot_everything_per_transformation(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
+    plot_everything_per_transformation(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)
 
     # Aggregate everything
     plot_everything(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE)

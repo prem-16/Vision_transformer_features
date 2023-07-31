@@ -25,13 +25,13 @@
 # theoretically with this and the DINOv1 and DINOv2 experiments, we can recreate SD + DINOv1 and SD + DINOv2 and explore alpha values...
 # python src/dataset_collection/generate_descriptors.py --identifier 1_3_2 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 FALSE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --combine_pca FALSE --pca TRUE --stride 4
 # Experiment 1_3_3: SD raw with s4
-python src/dataset_collection/generate_descriptors.py --identifier 1_3_3 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --pca FALSE --raw TRUE --raw_layer s4
+#python src/dataset_collection/generate_descriptors.py --identifier 1_3_3 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --pca FALSE --raw TRUE --raw_layer s4
 # Experiment 1_3_4: SD raw with s5
-python src/dataset_collection/generate_descriptors.py --identifier 1_3_4 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --pca FALSE --raw TRUE --raw_layer s5
+#python src/dataset_collection/generate_descriptors.py --identifier 1_3_4 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --pca FALSE --raw TRUE --raw_layer s5
 # Experiment 1_3_5: SD with mask
-python src/dataset_collection/generate_descriptors.py --identifier 1_3_5 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --pca FALSE --mask TRUE
-Experiment 2_2: SD with captions
-python src/dataset_collection/generate_descriptors.py --identifier 2_2 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino TRUE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --combine_pca FALSE --pca FALSE --raw TRUE --raw_layer s4  --stride 7 --allow_text_captions TRUE
-Experiment 2_3: SD with captions
+#python src/dataset_collection/generate_descriptors.py --identifier 1_3_5 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino FALSE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --pca FALSE --mask TRUE
+#Experiment 2_2: SD with captions
+#python src/dataset_collection/generate_descriptors.py --identifier 2_2 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino TRUE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --combine_pca FALSE --pca FALSE --raw TRUE --raw_layer s4  --stride 7 --allow_text_captions TRUE
+#Experiment 2_3: SD with captions
 python src/dataset_collection/generate_descriptors.py --identifier 2_3 --ignore_duplicates TRUE --disable_timestamp TRUE --model SD_DINO --fuse_dino TRUE --only_dino FALSE --dino_v2 TRUE --load_size 448 --sd_load_size 960 --dataset_path $dataset_dir --descriptor_dir $output_dir --combine_pca FALSE --pca FALSE --raw TRUE --raw_layer s5  --stride 7 --allow_text_captions TRUE
 # End of SD_DINO
