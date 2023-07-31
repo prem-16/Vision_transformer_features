@@ -311,20 +311,30 @@ if __name__ == "__main__":
     # VARIABLES
     APPLY_LOG = True
     APPLY_MOVING_AVG = False
+    STD_SCALE = 0.3
+    LOG_STD_SCALE = 0.1
+    # IMG_SIZE = 512
+    IMG_SIZE = 1
+    transformations = [
+        "rotation_X",
+        "rotation_Y",
+        "rotation_Z",
+        "translation_X",
+        "translation_Y",
+        "translation_Z"
+    ]
+    # DINOv1, DINOv2, SD + DINOv1, SD + DINOv2, OpenClip
+    config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_2_2)', '(id_1_2_3)']#, '(id_1_6)']#, '(id_1_3_4)', '(id_1_4_2)', '(id_1_5_3)']
+    # Plot per transform
+    plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
+
+    # VARIABLES
+    APPLY_LOG = True
+    APPLY_MOVING_AVG = False
     STD_SCALE = 0.5
     LOG_STD_SCALE = 0.1
     # IMG_SIZE = 512
     IMG_SIZE = 1
-
-    transformations = [
-        "rotation_Z",
-        "translation_Z"
-    ]
-    # DINOv1, DINOv2, SD + DINOv1, SD + DINOv2, OpenClip
-    config_ids = ['(id_1_1)', '(id_1_2_3)', '(id_1_6)', '(id_1_3_4)', '(id_1_4_2)', '(id_1_5_3)']
-    # Plot per transform
-    plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
-
     transformations = [
         "rotation_X",
         "rotation_Y",
@@ -339,6 +349,13 @@ if __name__ == "__main__":
         config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE
     )
 
+    # VARIABLES
+    APPLY_LOG = True
+    APPLY_MOVING_AVG = False
+    STD_SCALE = 0.5
+    LOG_STD_SCALE = 0.1
+    # IMG_SIZE = 512
+    IMG_SIZE = 1
     transformations = [
         "rotation_X",
         "rotation_Y",

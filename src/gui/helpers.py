@@ -12,12 +12,12 @@ def get_image_list(image_directory):
     """
     image_files = []
     image_dirs = []
-    shutil.rmtree(image_directory)
-    os.mkdir(image_directory)
-    image_data = read_data(datasets_dir="./test_data")
-    for i in range(len(image_data['image_rgb'])):
-        im = Image.fromarray(image_data['image_rgb'][i])
-        im.save(os.path.join(image_directory, f"test_{(i+1):02}.png"))
+    # shutil.rmtree(image_directory)
+    # os.mkdir(image_directory)
+    # image_data = read_data(datasets_dir="./test_data")
+    # for i in range(len(image_data['image_rgb'])):
+    #     im = Image.fromarray(image_data['image_rgb'][i])
+    #     im.save(os.path.join(image_directory, f"test_{(i+1):02}.png"))
     for root, dirs, files in os.walk(image_directory):
         for file in files:
             if file.endswith(".jpg") or file.endswith(".png"):

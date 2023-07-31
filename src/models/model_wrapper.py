@@ -169,7 +169,7 @@ class ModelWrapperBase(ABC):
         heatmap = np.repeat(heatmap, 3, axis=2)
         heatmap[:, :, 1:] = 0
         # Convert to PIL image
-        heatmap = Image.fromarray((heatmap * 255).astype(np.uint8))
+        heatmap = Image.fromarray((heatmap * 255.0).astype(np.uint8))
         # Resize
         heatmap = heatmap.resize(image_2.size)
         # Add the heatmap values to the image and cap the values at 255

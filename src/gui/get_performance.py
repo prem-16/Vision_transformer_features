@@ -302,7 +302,19 @@ configs = {
     },
     "(id_1_7)": {"model_name": "OPEN_CLIP", "exp_name": "OpenCLIP", "category": "OpenCLIP"},
     "(id_2_2)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s4 only", "category": "SD"},
+
+
+    # RUN THESE
     "(id_2_3)": {"model_name": "SD_DINO", "exp_name": "SD - with captions and s5 only", "category": "SD"},
+    "(id_1_4_3)": {
+        "model_name": "SD + DINOv2 - stride 7, layer 5, s5 only, with captions",
+        "descriptor_config_ids": ["(id_1_2_3)", "(id_2_3)"],
+        "category": "SD"
+    },
+
+
+
+
     "(id_2_1)": {"model_name": "SD_DINO", "exp_name": "SD - with captions", "category": "SD"},
 
     "(id_1_5_2)": {
