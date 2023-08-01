@@ -44,7 +44,7 @@ python src/dataset_collection/generate_descriptors.py \
     --raw TRUE \
     --raw_layer s4
 ```
-Note: commands --load_size --fuse_dino --only_dino --dino_v2 --sd_load_size --pca -raw --raw_layer are model specific and will be defined in the corresponding wrapper file e.g. src/gui/models/sd_dino/sd_dino_wrapper.py.
+Note: commands --load_size --fuse_dino --only_dino --dino_v2 --sd_load_size --pca -raw --raw_layer are model specific and will be defined in the corresponding wrapper file e.g. sd_dino_wrapper.py.
 
 ### Batch descriptor generation for all episodes
 Generation commands such as above can be batched into a single .txt file and run on all dataset data files.
@@ -70,7 +70,7 @@ Given the generated descriptors (with the expected prefix `(id_$identifier)`), v
 For example:
 ```python
 {
-  # DINOv1 experiment with default
+  # DINOv1 experiment with default metric
   "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4", "category": "DINOv1"},
 
   # Example of evaluating the same descriptors but using a different metric
