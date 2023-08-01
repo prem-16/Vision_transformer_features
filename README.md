@@ -72,6 +72,8 @@ For example:
 {
   # DINOv1 experiment with default
   "(id_1_1)": {"model_name": "SD_DINO", "exp_name": "DINOv1 - stride 4", "category": "DINOv1"},
+
+  # Example of evaluating the same descriptors but using a different metric
   "(id_3_1)": {
       "model_name": "SD_DINO",
       "descriptor_config_ids": ["(id_1_1)"],
@@ -79,12 +81,10 @@ For example:
       "exp_name": "DINOv1 - stride 4, per-head cosine similarity",
       "category": "DINOv1"
   },
-  "(id_3_2)": {
-      "model_name": "OPEN_CLIP",
-      "descriptor_config_ids": ["(id_1_6)"]
-      "exp_name": "OpenCLIP",
-      "category": "OpenCLIP"
-  },
+
+  # Example of evaluating the concatenation/fusion of multiple descriptors
+  # Note: resulting descriptor spatial dimensions will take the size of the first config in the list.
+  # Descriptors after will undergo a bilinear interpolation.
   "(id_1_6_2)": {
       "model_name": "SD_DINO",
       "descriptor_config_ids": ["(id_1_6)", "(id_1_3_4)"],
