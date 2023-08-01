@@ -44,7 +44,7 @@ python src/dataset_collection/generate_descriptors.py \
     --raw TRUE \
     --raw_layer s4
 ```
-Note: commands --fuse_dino --only_dino --dino_v2 --sd_load_size --pca -raw --raw_layer are model specific and will be defined in the corresponding wrapper file e.g. src/gui/models/sd_dino/sd_dino_wrapper.py.
+Note: commands --load_size --fuse_dino --only_dino --dino_v2 --sd_load_size --pca -raw --raw_layer are model specific and will be defined in the corresponding wrapper file e.g. src/gui/models/sd_dino/sd_dino_wrapper.py.
 
 ### Batch descriptor generation for all episodes
 Generation commands such as above can be batched into a single .txt file and run on all dataset data files.
@@ -141,4 +141,35 @@ To run the GUI application:
 ```
 python src/gui/main.py
 ```
-![Alt text](/imags/gui_screenshot.png?raw=true)
+![Alt text](/images/gui_screenshot.png?raw=true)
+
+## Additional models
+- Inherit from `ModelWrapperBase`
+    - Implement unimplemented methods.
+    - Define NAME
+    - Define SETTINGS e.g. 
+      ```python
+      SETTINGS = {
+        "stride": {
+            "type": "slider",
+            "min": 1,
+            "max": 10,
+            "default": 4
+        },
+        "load_size": {
+            "type": "slider",
+            "min": 1,
+            "max": 1000,
+            "default": 224
+        },
+        "layer": {
+            "type": "slider",
+            "min": 1,
+            "max": 11,
+            "default": 9
+        }
+      }
+      ```
+- Register new class in model_wrapper_list.py
+
+The model should be ready to generate descriptors and visualize using the GUI application!
