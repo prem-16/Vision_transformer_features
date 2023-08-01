@@ -237,6 +237,8 @@ def separate_head_similarity(metric="cosine", head_size=None):
         metric = torch.nn.CosineSimilarity(dim=3)
     elif metric == "euclidean":
         metric = torch.nn.PairwiseDistance()
+    elif metric == "dot":
+        metric = torch.dot
     else:
         raise Exception("Unknown metric")
 

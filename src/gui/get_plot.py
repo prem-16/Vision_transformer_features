@@ -191,7 +191,7 @@ def plot_per_transform(config_ids, transformations, apply_log, apply_moving_avg,
         plt.close(fig='all')
 
 
-def plot_everything_per_transformation(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
+def plot_scatter(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
     configs, _, heatmap_errors_all, max_point_errors_all, heatmap_std_errors_all, max_point_std_errors_all = \
         gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size)
 
@@ -237,7 +237,7 @@ def plot_everything_per_transformation(config_ids, transformations, apply_log, a
     plt.savefig(f"plots/heatmap_all_transformations", bbox_inches='tight')
 
 
-def plot_everything(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
+def plot_bar(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size):
     configs, _, heatmap_errors_all, max_point_errors_all, heatmap_std_errors_all, max_point_std_errors_all = \
         gather_data(config_ids, transformations, apply_log, apply_moving_avg, std_scale, log_std_scale, img_size)
 
@@ -317,14 +317,14 @@ if __name__ == "__main__":
     IMG_SIZE = 1
     transformations = [
         "rotation_X",
-        "rotation_Y",
+        # "rotation_Y",
         "rotation_Z",
-        "translation_X",
+        # "translation_X",
         "translation_Y",
-        "translation_Z"
+        # "translation_Z"
     ]
     # DINOv1, DINOv2, SD + DINOv1, SD + DINOv2, OpenClip
-    config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_2_2)', '(id_1_2_3)']#, '(id_1_6)']#, '(id_1_3_4)', '(id_1_4_2)', '(id_1_5_3)']
+    config_ids = ['(id_1_1)', '(id_1_2)', '(id_1_2_2)', '(id_1_2_3)', '(id_2_3)', '(id_1_6)']#, '(id_1_6)']#, '(id_1_3_4)', '(id_1_4_2)', '(id_1_5_3)']
     # Plot per transform
     plot_per_transform(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
 
@@ -345,7 +345,7 @@ if __name__ == "__main__":
     ]
     config_ids = ['(id_1_1)', '(id_1_2_3)', '(id_1_6)', '(id_1_3_4)', '(id_1_4_2)', '(id_1_5_3)']
     # Aggregate everything for each transform
-    plot_everything_per_transformation(
+    plot_scatter(
         config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE
     )
 
@@ -369,4 +369,4 @@ if __name__ == "__main__":
         '(id_1_7)', '(id_1_6_2)', '(id_2_2)', '(id_2_3)', '(id_3_2)', '(id_3_3)', '(id_3_4)', '(id_3_5)'
     ]]
     # Aggregate everything
-    plot_everything(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
+    plot_bar(config_ids, transformations, APPLY_LOG, APPLY_MOVING_AVG, STD_SCALE, LOG_STD_SCALE, IMG_SIZE)
