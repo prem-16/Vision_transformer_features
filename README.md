@@ -22,7 +22,9 @@ pip uninstall stable-diffusion-sdkit
 ```
 
 ## ManiSkill2 Dataset Generation
-Placeholder
+```
+python src/dataset_collection/generate_dataset.py -e PickCube-v0 -o rgbd -translation translation_X
+```
 
 ## Descriptor Generation
 ### Descriptor generation for an individual episode.
