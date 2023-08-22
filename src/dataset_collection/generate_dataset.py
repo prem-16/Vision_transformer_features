@@ -40,6 +40,7 @@ def parse_args():
     parser.add_argument("--render-mode", type=str, default="cameras")
     parser.add_argument("--enable-sapien-viewer", action="store_true")
     parser.add_argument("--record-dir", type=str)
+    parser.add_argument("--translation", type=str, required= True)
     args, opts = parser.parse_known_args()
 
     # Parse env kwargs
@@ -309,7 +310,7 @@ def main():
     after_reset = True
     data_agent = DataAgent(env, args.env_id,args.control_mode, num_steps= 100)
 
-    transformations = ["rotation_Z"]
+    transformations = [args.translation]
     num_episodes = 10
     for transformation in transformations:
         start_episode = 5
